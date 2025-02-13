@@ -1,0 +1,22 @@
+generate p p > h QCD<=99 [QCD]
+output GGF_Higgs
+launch GGF_Higgs
+
+shower=Pythia8
+detector=Delphes
+analysis=OFF
+madspin=OFF
+done
+
+Cards/delphes_card.dat
+
+set run_card nevents 10000
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+
+set run_card use_syst False
+
+set pythia8_card 25:onMode = off
+set pythia8_card 25:onIfMatch = 22 22
+
+done
