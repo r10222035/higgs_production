@@ -16,3 +16,4 @@ config_files/
 *.sh
 Sample/GGF_Higgs/
 Sample/VBF_Higgs/
+Sample/data/
