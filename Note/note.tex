@@ -88,7 +88,7 @@
 
 \section{Higgs Production}% (fold)
 \label{sec:higgs_production}
-    We want to apply the deep learning methods in distinguishing vector boson fusion (VBF) from gluon-gluon fusion (GGF) Higgs production at the LHC.
+    We want to apply deep learning methods to distinguish vector boson fusion (VBF) from gluon-gluon fusion (GGF) and Higgs production at the LHC.
 
     We want to apply the CWoLa methods, then can use the real data without knowing the true label.
 % section higgs_production (end)
@@ -98,7 +98,7 @@
     \label{sub:monte_carlo_samples}
         We consider Standard Model (SM) di-photon Higgs events produced via GGF and VBF channels at a center-of-mass energy of $\sqrt{s} = 14$ TeV. The Higgs boson events are generated using \verb|MadGraph 3.3.1|~\cite{Alwall:2014hca} for both GGF and VBF production. The Higgs decays into the di-photon final state, and the parton showering and hadronization are simulated using \verb|Pythia 8.306|~\cite{Sjostrand:2014zea}. The detector simulation is conducted by \verb|Delphes 3.4.2|~\cite{deFavereau:2013fsa}. Jet reconstruction is performed using \verb|FastJet 3.3.2|~\cite{Cacciari:2011ma} with the anti-$k_t$ algorithm~\cite{Cacciari:2008gp} and a jet radius of $R = 0.4$. These jets are required to have transverse momentum $p_{\text{T}} > 25$ GeV.
 
-        The following \verb|MadGraph| scripts are used to generate Monte Carlo samples for each production channel.
+        The following \verb|MadGraph| scripts generate Monte Carlo samples for each production channel.
         \paragraph{GGF Higgs Sample Generation}
         \begin{lstlisting}
             generate p p > h QCD<=99 [QCD]
@@ -187,7 +187,40 @@
             \label{fig:mjj_deta_scatter}
         \end{figure}
     % subsection event_selection (end)
-    
+    \subsection{Event image}% (fold)
+    \label{sub:event_image}
+        The inputs for the neural networks are event images~\cite{Kasieczka:2019dbj,deOliveira:2015xxd, Kasieczka2017nv}. These images are constructed from events that pass the kinematic selection criteria described in section~\ref{sub:event_selection}. Each event image has three channels corresponding to calorimeter towers, track, and photons. The following preprocessing steps are applied to all event constituents:
+        \begin{enumerate}
+            \item Translation: Compute the $p_{\text{T}}$-weighted center in the $\phi$ coordinates, then shift this point to the origin.
+            \item Flipping: Flip the highest $p_{\text{T}}$ quadrant to the first quadrant.
+            \item Pixelation: Pixelate in a $\eta \in [-5, 5],\ \phi \in [-\pi, \pi]$ box, with $40 \times 40$ pixels 
+        \end{enumerate}
+
+        Figure~\ref{fig:GGF_VEF_event_image} shows the event images for GGF and VBF production modes.
+        \begin{figure}[htpb]
+            \centering
+            \subfloat[GGF: Calorimeter Tower]{
+                \includegraphics[width=0.45\textwidth]{event_image_GGF-tower.pdf}
+            }
+            \subfloat[VBF: Calorimeter Tower]{
+                \includegraphics[width=0.45\textwidth]{event_image_VBF-tower.pdf}
+            } \\
+            \subfloat[GGF: Track]{
+                \includegraphics[width=0.45\textwidth]{event_image_GGF-track.pdf}
+            }
+            \subfloat[VBF: Track]{
+                \includegraphics[width=0.45\textwidth]{event_image_VBF-track.pdf}
+            } \\
+            \subfloat[GGF: Photon]{
+                \includegraphics[width=0.45\textwidth]{event_image_GGF-photon.pdf}
+            }
+            \subfloat[VBF: Photon]{
+                \includegraphics[width=0.45\textwidth]{event_image_VBF-photon.pdf}
+            }
+            \caption{Event images for GGF and VBF production, separately shown for calorimeter towers, tracks, and photons.}
+            \label{fig:GGF_VEF_event_image}
+        \end{figure}
+    % subsection event_image (end)
 % section sample_preparation (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
