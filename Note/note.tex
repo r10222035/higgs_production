@@ -221,6 +221,58 @@
             \label{fig:GGF_VEF_event_image}
         \end{figure}
     % subsection event_image (end)
+    \subsection{Mixed datasets}% (fold)
+    \label{sub:mixed_datasets}
+        Based on figure~\ref{fig:mjj_deta_distribution}, we set selection cuts of $m_{jj} > 300$ GeV and $\Delta\eta_{jj} > 3.1$. We consider three cases: applying each cut individually and applying both cuts simultaneously. These cuts define the signal region (SR), which is VBF-like, and the background region (BR), which is GGF-like. Table~\ref{tab:GGF_VBF_Higgs_cutflow_number_mixed_dataset} summarizes the cutflow results for different selection criteria.
+        \begin{table}[htpb]
+            \centering
+            \caption{Number of passing events and passing rates for GGF and VBF Higgs production under different selection cuts.}
+            \label{tab:GGF_VBF_Higgs_cutflow_number_mixed_dataset}
+            \begin{tabular}{l|rr|rr}
+                Cut                                & GGF    & pass rate & VBF    & pass rate \\ \hline
+                Total                              & 100000 & 1.00      & 100000 & 1.00      \\
+                $n_{\gamma}$ cut                   & 9302   & 0.09      & 42860  & 0.43      \\
+                $n_j$ cut                          & 9302   & 0.09      & 42860  & 0.43      \\
+                $m_{\gamma\gamma}$ cut             & 8864   & 0.09      & 40694  & 0.41      \\ \hline
+                $m_{jj}$ cut: SR                   & 2695   & 0.03      & 29496  & 0.29      \\
+                $m_{jj}$ cut: BR                   & 6169   & 0.06      & 11198  & 0.11      \\ \hline
+                $\Delta\eta_{jj}$ cut: SR          & 2317   & 0.02      & 28160  & 0.28      \\
+                $\Delta\eta_{jj}$ cut: BR          & 6547   & 0.07      & 12534  & 0.13      \\ \hline
+                $m_{jj}, \Delta\eta_{jj}$ cuts: SR & 1832   & 0.02      & 26446  & 0.26      \\
+                $m_{jj}, \Delta\eta_{jj}$ cuts: BR & 5684   & 0.06      & 9484   & 0.09     
+            \end{tabular}
+        \end{table}
+
+        The total cross-section for VBF production is $\sigma_{\text{VBF}} = 4.278$ pb$^{-1}$ at NNLO and for GGF production is $\sigma_{\text{GGF}} = 54.67$ pb$^{-1}$ at N3LO, as referenced in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt14TeV}{this link}. The branching ratio for the di-photon decay channel is $\Gamma\left( h \to \gamma\gamma \right) = 2.270 \times 10^{-3}$, as given in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR}{this link}.
+
+        Assuming the luminosity of $\mathcal{L} = \text{300 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. These results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset}
+        \begin{table}[htpb]
+            \centering
+            \caption{The number of events of mixed datasets under different selection cuts.}
+            \label{tab:number_of_event_in_mixed_dataset}
+            \subfloat[$m_{jj} > 300$ GeV]{
+                \begin{tabular}{c|cc}
+                       & GGF & VBF \\ \hline
+                    BR & 2297 & 326 \\
+                    SR & 1003 & 859
+                \end{tabular}
+            }
+            \subfloat[$\Delta\eta_{jj} > 3.1$]{
+                \begin{tabular}{c|cc}
+                       & GGF & VBF \\ \hline
+                    BR & 2437 & 365 \\
+                    SR & 863  & 820
+                \end{tabular}
+            } \\
+            \subfloat[$m_{jj} > 300$ GeV, \newline $\Delta\eta_{jj} > 3.1$]{
+                \begin{tabular}{c|cc}
+                       & GGF & VBF \\ \hline
+                    BR & 2116 & 276 \\
+                    SR & 682  & 770
+                \end{tabular}
+            }
+        \end{table}
+    % subsection mixed_datasets (end)
 % section sample_preparation (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
