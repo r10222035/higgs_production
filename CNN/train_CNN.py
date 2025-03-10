@@ -33,7 +33,7 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
     data_GGF_SR = np.load(npy_dir0 / 'GGF_in_SR-data.npy')
     data_GGF_BR = np.load(npy_dir0 / 'GGF_in_BR-data.npy')
 
-    n_VBF_SR, n_VBF_BR, n_GGF_SR, n_GGF_BR = nevents
+    n_VBF_SR, n_GGF_SR, n_VBF_BR, n_GGF_BR = nevents
     n_test = 10000
     r_tr, r_vl = ratios
 
