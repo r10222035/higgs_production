@@ -119,8 +119,8 @@ def compute_nevent_in_SR_BR(L=300, cut_type='mjj'):
     # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR
     BR_Haa = 0.00227
 
-    GGF_selection = np.load('../Sample/selection_results_GGF_300_3.1.npy', allow_pickle=True).item()
-    VBF_selection = np.load('../Sample/selection_results_VBF_300_3.1.npy', allow_pickle=True).item()
+    GGF_selection = np.load('../Sample/selection_results_GGF_225_2.3.npy', allow_pickle=True).item()
+    VBF_selection = np.load('../Sample/selection_results_VBF_225_2.3.npy', allow_pickle=True).item()
     
     if cut_type == 'mjj':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
@@ -202,6 +202,15 @@ def get_tpr_from_fpr(passing_rate, fpr, tpr):
     return tpr[n_th]
 
 
+def pt_normalization(X):
+    # input shape: (n, res, res, 2)
+    mean = np.mean(X, axis=(1, 2), keepdims=True)
+    std = np.std(X, axis=(1, 2), keepdims=True)
+    epsilon = 1e-8
+    std = np.where(std < epsilon, epsilon, std)
+    return (X - mean) / std
+
+
 def main():
     config_path = sys.argv[1]
 
@@ -234,6 +243,11 @@ def main():
     n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
 
     X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
+
+    # normalize the datasets
+    X_train = pt_normalization(X_train)
+    X_val = pt_normalization(X_val)
+    X_test = pt_normalization(X_test)
 
     train_size = get_sample_size(y_train)
     val_size = get_sample_size(y_val)
