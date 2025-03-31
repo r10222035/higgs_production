@@ -94,7 +94,7 @@
 \label{sec:higgs_production}
     We want to apply deep learning methods to distinguish vector boson fusion (VBF) from gluon-gluon fusion (GGF) and Higgs production at the LHC.
 
-    We want to apply the CWoLa method, then can use the real data without knowing the true label.
+    We want to apply the CWoLa method, then we can use the real data without knowing the true label.
 % section higgs_production (end)
 \section{Sample Preparation}% (fold)
 \label{sec:sample_preparation}
@@ -249,7 +249,7 @@
 
         The total cross-section for VBF production is $\sigma_{\text{VBF}} = 4.278$ pb$^{-1}$ at NNLO and for GGF production is $\sigma_{\text{GGF}} = 54.67$ pb$^{-1}$ at N3LO, as referenced in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt14TeV}{this link}. The branching ratio for the di-photon decay channel is $\Gamma\left( h \to \gamma\gamma \right) = 2.270 \times 10^{-3}$, as given in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR}{this link}.
 
-        Assuming the luminosity of $\mathcal{L} = \text{300 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. These results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset}
+        Assuming the luminosity of $\mathcal{L} = \text{300 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. These results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset}.
         \begin{table}[htpb]
             \centering
             \caption{The number of events of mixed datasets under different selection cuts.}
@@ -476,6 +476,93 @@
         \end{tabular}
     \end{table}
 % section different_cut_setting (end)
+\section{Supervised training}% (fold)
+\label{sec:supervised_training}
+    This section tests the supervised training on CNN. The training, validation, and testing sample size are summarized in table~\ref{tab:supervised_sample_size}. The events passing all selection requirements (section~\ref{sub:event_selection}) are considered.
+    \begin{table}[htbp]
+        \centering
+        \caption{Sizes of various samples used for supervised training.}
+        \label{tab:supervised_sample_size}
+        \begin{tabular}{l|ccc}
+                & Training & Validation & Testing \\ \hline
+            GGF & 100k     & 25k        & 25k     \\
+            VBF & 100k     & 25k        & 25k      
+        \end{tabular}
+    \end{table}
+
+    The training results are summarized in table~\ref{tab:supervised_CNN_training_results}. These results demonstrate the upper limit of CNN training.
+    \begin{table}[htpb]
+        \centering
+        \caption{The CNN training results with $p_{\text{T}}$ normalization technique. The ACC and AUC are evaluated based on 10 training.}
+        \label{tab:supervised_CNN_training_results}
+        \begin{tabular}{c|c}
+             ACC               & AUC               \\ \hline
+             $0.784 \pm 0.001$ & $0.861 \pm 0.001$ \\
+        \end{tabular}
+    \end{table}
+
+    \subsection{Testing sample in SR and BR}% (fold)
+    \label{sub:testing_sample_in_sr_and_br}
+        The testing events used to evaluate the table~\ref{tab:supervised_CNN_training_results} are all events passing the selection and not restricted to the particular SR. Thus, to make a fair comparison with previous results, we need to evaluate the training performance on the events in SR and BR.
+
+        The new testing dataset consists of the 10,000 VBF and 10,000 GGF events from SR and BR. The number of SR and BR events are computed from table~\ref{tab:GGF_VBF_Higgs_cutflow_number_mixed_dataset_225_2.3}.
+
+        The training results of table~\ref{tab:CWoLa_CNN_training_results_3000_pT_norm_225_2.3} are re-evaluated on the new testing set and shown in table~\ref{tab:CWoLa_CNN_training_results_3000_pT_norm_225_2.3_new_test_set}. The results are better than the table~\ref{tab:CWoLa_CNN_training_results_3000_pT_norm_225_2.3}. It seems that the events in the BR can be distinguished better than the events in SR.
+    \begin{table}[htpb]
+        \centering
+        \caption{The CNN training results with $p_{\text{T}}$ normalization technique. The ACC and AUC are evaluated based on 10 training. The selection cuts of $m_{jj} > \text{225 GeV}$ and $\Delta\eta_{jj} > 2.3$ are applied.}
+        \label{tab:CWoLa_CNN_training_results_3000_pT_norm_225_2.3_new_test_set}
+        \begin{tabular}{l|cc|cc}
+                                      & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Cut                       & ACC               & AUC               & ACC               & AUC               \\ \hline
+            $m_{jj}$                  & $0.863 \pm 0.004$ & $0.940 \pm 0.002$ & $0.716 \pm 0.003$ & $0.780 \pm 0.004$ \\
+            $\Delta\eta_{jj}$         & $0.914 \pm 0.004$ & $0.972 \pm 0.003$ & $0.702 \pm 0.003$ & $0.754 \pm 0.003$ \\
+            $m_{jj}, \Delta\eta_{jj}$ & $0.896 \pm 0.006$ & $0.962 \pm 0.004$ & $0.723 \pm 0.003$ & $0.780 \pm 0.002$
+        \end{tabular}
+    \end{table}
+    % subsection testing_sample_in_sr_and_br (end)
+% section supervised_training (end)
+\section{Use jet tagging results to construct mixed datasets}% (fold)
+\label{sec:use_jet_tagging_results_to_construct_mixed_datasets}
+    This section uses the jet tagging results to construct the mixed datasets.
+
+    Assuming the luminosity of $\mathcal{L} = \text{3000 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. The SR and BR are defined based on the number of the gluon jets $n_g$. These results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset_gluon_jet}.
+
+    \begin{table}[htpb]
+        \centering
+        \caption{The number of events of mixed datasets under different selection cuts.}
+        \label{tab:number_of_event_in_mixed_dataset_gluon_jet}
+        \subfloat[$n_g = 2$]{
+            \begin{tabular}{c|cc}
+                   & GGF   & VBF   \\ \hline
+                BR & 30752 & 11779 \\
+                SR & 2941  & 47
+            \end{tabular}
+        }
+        \subfloat[$n_g \ge 1$]{
+            \begin{tabular}{c|cc}
+                   & GGF   & VBF     \\ \hline
+                BR & 16828 & 10229 \\
+                SR & 16865 & 1596
+            \end{tabular}
+        } 
+    \end{table}
+
+    For now, we use the truth information from \verb|Delphes| and do not consider the mis-tagging case.
+
+    The training results are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_pT_norm_gluon_jet}. The results are worse than the table~\ref{tab:CWoLa_CNN_training_results_3000_pT_norm_225_2.3_new_test_set}.
+    \begin{table}[htpb]
+        \centering
+        \caption{The CNN training results with $p_{\text{T}}$ normalization technique. The ACC and AUC are evaluated based on 10 training. The selection cuts of the number of gluon jets are applied.}
+        \label{tab:CWoLa_CNN_training_results_3000_pT_norm_gluon_jet}
+        \begin{tabular}{l|cc|cc}
+                                      & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Cut                       & ACC               & AUC               & ACC               & AUC               \\ \hline
+            $n_g = 2$                 & $0.934 \pm 0.000$ & $0.689 \pm 0.012$ & $0.662 \pm 0.006$ & $0.719 \pm 0.008$ \\
+            $n_g \ge 1$               & $0.623 \pm 0.005$ & $0.642 \pm 0.005$ & $0.653 \pm 0.008$ & $0.706 \pm 0.009$ \\
+        \end{tabular}
+    \end{table}
+% section use_jet_tagging_results_to_construct_mixed_datasets (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
 
