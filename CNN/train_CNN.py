@@ -16,7 +16,7 @@ import tensorflow as tf
 from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 
 def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), seed=0):
@@ -35,13 +35,18 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
 
     n_VBF_SR, n_GGF_SR, n_VBF_BR, n_GGF_BR = nevents
     n_test = 10000
+    n_VBF_SR_test = int(data_VBF_SR.shape[0] / (data_VBF_SR.shape[0] + data_VBF_BR.shape[0]) * n_test)
+    n_VBF_BR_test = n_test - n_VBF_SR_test
+    n_GGF_SR_test = int(data_GGF_SR.shape[0] / (data_GGF_SR.shape[0] + data_GGF_BR.shape[0]) * n_test)
+    n_GGF_BR_test = n_test - n_GGF_SR_test
+
     r_tr, r_vl = ratios
 
     np.random.seed(seed)
-    idx_VBF_SR = np.random.choice(data_VBF_SR.shape[0], n_VBF_SR + n_test, replace=False)
-    idx_VBF_BR = np.random.choice(data_VBF_BR.shape[0], n_VBF_BR, replace=False)
-    idx_GGF_SR = np.random.choice(data_GGF_SR.shape[0], n_GGF_SR + n_test, replace=False)
-    idx_GGF_BR = np.random.choice(data_GGF_BR.shape[0], n_GGF_BR, replace=False)
+    idx_VBF_SR = np.random.choice(data_VBF_SR.shape[0], n_VBF_SR + n_VBF_SR_test, replace=False)
+    idx_VBF_BR = np.random.choice(data_VBF_BR.shape[0], n_VBF_BR + n_VBF_BR_test, replace=False)
+    idx_GGF_SR = np.random.choice(data_GGF_SR.shape[0], n_GGF_SR + n_GGF_SR_test, replace=False)
+    idx_GGF_BR = np.random.choice(data_GGF_BR.shape[0], n_GGF_BR + n_GGF_BR_test, replace=False)
 
     idx_VBF_SR_tr = idx_VBF_SR[:int(n_VBF_SR*r_tr)]
     idx_VBF_BR_tr = idx_VBF_BR[:int(n_VBF_BR*r_tr)]
@@ -52,9 +57,9 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
     idx_GGF_SR_vl = idx_GGF_SR[int(n_GGF_SR*r_tr):n_GGF_SR]
     idx_GGF_BR_vl = idx_GGF_BR[int(n_GGF_BR*r_tr):n_GGF_BR]
     idx_VBF_SR_te = idx_VBF_SR[n_VBF_SR:]
-    # idx_VBF_BR_te = idx_VBF_BR[int(n_VBF_BR*(r_tr+r_vl)):]
+    idx_VBF_BR_te = idx_VBF_BR[n_VBF_BR:]
     idx_GGF_SR_te = idx_GGF_SR[n_GGF_SR:]
-    # idx_GGF_BR_te = idx_GGF_BR[int(n_GGF_BR*(r_tr+r_vl)):]
+    idx_GGF_BR_te = idx_GGF_BR[n_GGF_BR:]
 
     print(f'Preparing dataset from {npy_dirs}')
     for npy_dir in npy_dirs:
@@ -78,10 +83,10 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
             data_GGF_BR[idx_GGF_BR_vl]
         ], axis=0)
         new_data_te = np.concatenate([
-            data_VBF_SR[idx_VBF_SR_te],
             data_GGF_SR[idx_GGF_SR_te],
-            # data_VBF_BR[idx_VBF_BR_te],
-            # data_GGF_BR[idx_GGF_BR_te]
+            data_GGF_BR[idx_GGF_BR_te],
+            data_VBF_SR[idx_VBF_SR_te],
+            data_VBF_BR[idx_VBF_BR_te],
         ], axis=0)
 
         if data_tr is None:
@@ -112,16 +117,16 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
     return data_tr, data_vl, data_te, label_tr, label_vl, label_te
 
 
-def compute_nevent_in_SR_BR(L=300, cut_type='mjj'):
+def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_300_3.1.npy', VBF_cutflow_file='../Sample/selection_results_VBF_300_3.1.npy', L=300, cut_type='mjj'):
     # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt14TeV
     cross_section_GGF = 54.67 * 1000
     cross_section_VBF = 4.278 * 1000
     # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR
     BR_Haa = 0.00227
 
-    GGF_selection = np.load('../Sample/selection_results_GGF_225_2.3.npy', allow_pickle=True).item()
-    VBF_selection = np.load('../Sample/selection_results_VBF_225_2.3.npy', allow_pickle=True).item()
-    
+    GGF_selection = np.load(GGF_cutflow_file, allow_pickle=True).item()
+    VBF_selection = np.load(VBF_cutflow_file, allow_pickle=True).item()
+    print(cut_type)
     if cut_type == 'mjj':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
@@ -137,8 +142,18 @@ def compute_nevent_in_SR_BR(L=300, cut_type='mjj'):
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['mjj, deta: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['mjj, deta: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['mjj, deta: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+    elif cut_type == 'gluon_jet_2':
+        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+    elif cut_type == 'gluon_jet_1':
+        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
     else:
-        raise ValueError('cut_type must be mjj, deta, or mjj, deta')
+        raise ValueError('cut_type must be mjj, deta, or mjj, or deta, or gluon_jet')
     return n_VBF_SR, n_GGF_SR, n_VBF_BR, n_GGF_BR
 
 
@@ -225,6 +240,9 @@ def main():
     model_name = config['model_name']
     sample_type = config['sample_type']
 
+    GGF_cutflow_file = config['GGF_cutflow_file']
+    VBF_cutflow_file = config['VBF_cutflow_file']
+
     # Training parameters
     with open('params.json', 'r') as f:
         params = json.load(f)
@@ -239,7 +257,7 @@ def main():
 
     # Sampling dataset
     r_train, r_val = 0.8, 0.2
-    n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(luminosity, cut_type)
+    n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type)
     n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
 
     X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
