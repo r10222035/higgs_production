@@ -16,7 +16,7 @@ import tensorflow as tf
 from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), seed=0):
@@ -126,7 +126,7 @@ def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_30
 
     GGF_selection = np.load(GGF_cutflow_file, allow_pickle=True).item()
     VBF_selection = np.load(VBF_cutflow_file, allow_pickle=True).item()
-    print(cut_type)
+
     if cut_type == 'mjj':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
@@ -152,6 +152,11 @@ def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_30
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+    elif cut_type == 'quark_gluon_jet_2':
+        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
     else:
         raise ValueError('cut_type must be mjj, deta, or mjj, or deta, or gluon_jet')
     return n_VBF_SR, n_GGF_SR, n_VBF_BR, n_GGF_BR
@@ -262,10 +267,10 @@ def main():
 
     X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
 
-    # normalize the datasets
-    X_train = pt_normalization(X_train)
-    X_val = pt_normalization(X_val)
-    X_test = pt_normalization(X_test)
+    # # normalize the datasets
+    # X_train = pt_normalization(X_train)
+    # X_val = pt_normalization(X_val)
+    # X_test = pt_normalization(X_test)
 
     train_size = get_sample_size(y_train)
     val_size = get_sample_size(y_val)
