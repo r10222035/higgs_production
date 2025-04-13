@@ -83,10 +83,10 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
             data_GGF_BR[idx_GGF_BR_vl]
         ], axis=0)
         new_data_te = np.concatenate([
-            data_GGF_SR[idx_GGF_SR_te],
-            data_GGF_BR[idx_GGF_BR_te],
             data_VBF_SR[idx_VBF_SR_te],
             data_VBF_BR[idx_VBF_BR_te],
+            data_GGF_SR[idx_GGF_SR_te],
+            data_GGF_BR[idx_GGF_BR_te],
         ], axis=0)
 
         if data_tr is None:
@@ -152,6 +152,16 @@ def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_30
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+    elif cut_type == 'quark_jet_2':
+        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+    elif cut_type == 'quark_jet_1':
+        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['one quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one quark jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
+        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one quark jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR_Haa * L
     elif cut_type == 'quark_gluon_jet_2':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR_Haa * L
@@ -276,6 +286,8 @@ def main():
     val_size = get_sample_size(y_val)
     test_size = get_sample_size(y_test)
 
+    class_weight = {0: 1.0, 1: train_size[1] / train_size[0]}
+
     with tf.device('CPU'):
         train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
         train_dataset = train_dataset.shuffle(buffer_size=len(y_train)).batch(BATCH_SIZE)
@@ -292,7 +304,7 @@ def main():
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=min_delta, verbose=1, patience=patience)
     check_point = tf.keras.callbacks.ModelCheckpoint(save_model_name, monitor='val_loss', verbose=1, save_best_only=True)
 
-    history = model.fit(train_dataset, validation_data=valid_dataset, epochs=EPOCHS, callbacks=[early_stopping, check_point])
+    history = model.fit(train_dataset, validation_data=valid_dataset, epochs=EPOCHS, class_weight=class_weight, callbacks=[early_stopping, check_point])
 
     # Training results
     best_model_name = f'./CNN_models/best_model_GGF_VBF_CWoLa_{model_name}/'
