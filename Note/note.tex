@@ -657,6 +657,38 @@
     % subsection results (end)
 
 % section total_scaling_of_transverse_momentum (end)
+\section{Data augmentation}% (fold)
+\label{sec:data_augmentation}
+    To improve the training performance, we consider the various data augmentation methods.
+
+    \subsection{\texorpdfstring{$p_{\mathrm{T}}$}{pT} smearing}% (fold)
+    \label{sub:pt_smearing}
+        The $p_{\text{T}}$ smearing method is used to simulate detector resolution effects on the transverse momentum of event constituents. This method resamples the transverse momentum $p_{\text{T}}$ of event constituents according to the normal distribution:
+            \begin{equation}
+                p_{\text{T}}' \sim \mathcal{N}\left( p_{\text{T}}, f(p_{\text{T}}) \right), \quad f(p_{\text{T}}) = \sqrt{0.052 p_{\text{T}}^2 + 1.502p_{\text{T}}},
+            \end{equation}
+            where $p_{\text{T}}'$ is the augmented transverse momentum, and $f\left( p_\text{T} \right) $ is the energy smearing function applied by \verb|Delphes| (the $p_{\text{T}}$'s are normalized in units of GeV). The preprocessing is applied after the $p_{\text{T}}$ smearing augmentation.
+
+            The training results of the $2q0g$ datasets (Table~\ref{tab:number_of_event_in_mixed_dataset_gluon_jet} (a)) are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_pT_aug_5_10}. 
+        \begin{table}[htpb]
+            \centering
+            \caption{The CNN training results with different augmentation size. The ACC and AUC are evaluated based on 10 training. The selection cuts of the number of gluon jets are applied.}
+            \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_pT_aug_5_10}
+            \begin{tabular}{l|cc|cc}
+                         & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+                Original & $0.615 \pm 0.005$ & $0.632 \pm 0.007$ & $0.650 \pm 0.011$ & $0.703 \pm 0.015$ \\
+                +5       & $0.625 \pm 0.006$ & $0.653 \pm 0.009$ & $0.661 \pm 0.010$ & $0.714 \pm 0.012$ \\
+                +10      & $0.629 \pm 0.005$ & $0.658 \pm 0.005$ & $0.666 \pm 0.008$ & $0.721 \pm 0.009$
+            \end{tabular}
+        \end{table}
+    % subsection pt_smearing (end)
+    % \subsection{\texorpdfstring{$\phi$}{phi} shifting}% (fold)
+    % \label{sub:phi_shifting}
+    %     
+    % % subsection phi_shifting (end)
+
+% section data_augmentation (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
 
