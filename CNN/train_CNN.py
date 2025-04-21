@@ -19,7 +19,7 @@ from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
-def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), seed=0):
+def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0):
     # npy_dirs: list of npy directories
     # nevents: tuple of (n_VBF_SR, n_VBF_BR, n_GGF_SR, n_GGF_BR)
     # ratios: tuple of (r_train, r_val)
@@ -82,37 +82,49 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8,0.2), see
             data_VBF_BR[idx_VBF_BR_vl],
             data_GGF_BR[idx_GGF_BR_vl]
         ], axis=0)
-        new_data_te = np.concatenate([
-            data_VBF_SR[idx_VBF_SR_te],
-            data_VBF_BR[idx_VBF_BR_te],
-            data_GGF_SR[idx_GGF_SR_te],
-            data_GGF_BR[idx_GGF_BR_te],
-        ], axis=0)
+        # new_data_te = np.concatenate([
+        #     data_VBF_SR[idx_VBF_SR_te],
+        #     data_VBF_BR[idx_VBF_BR_te],
+        #     data_GGF_SR[idx_GGF_SR_te],
+        #     data_GGF_BR[idx_GGF_BR_te],
+        # ], axis=0)
 
         if data_tr is None:
             data_tr = new_data_tr
             data_vl = new_data_vl
-            data_te = new_data_te
+            # data_te = new_data_te
         else:
             data_tr = np.concatenate([data_tr, new_data_tr], axis=0)
             data_vl = np.concatenate([data_vl, new_data_vl], axis=0)
-            data_te = np.concatenate([data_te, new_data_te], axis=0)
+            # data_te = np.concatenate([data_te, new_data_te], axis=0)
 
         new_label_tr = np.zeros(new_data_tr.shape[0])
         new_label_tr[:idx_VBF_SR_tr.shape[0] + idx_GGF_SR_tr.shape[0]] = 1
         new_label_vl = np.zeros(new_data_vl.shape[0])
         new_label_vl[:idx_VBF_SR_vl.shape[0] + idx_GGF_SR_vl.shape[0]] = 1
-        new_label_te = np.zeros(new_data_te.shape[0])
-        new_label_te[:n_test] = 1
+        # new_label_te = np.zeros(new_data_te.shape[0])
+        # new_label_te[:n_test] = 1
 
         if label_tr is None:
             label_tr = new_label_tr
             label_vl = new_label_vl
-            label_te = new_label_te
+            # label_te = new_label_te
         else:
             label_tr = np.concatenate([label_tr, new_label_tr])
             label_vl = np.concatenate([label_vl, new_label_vl])
-            label_te = np.concatenate([label_te, new_label_te])
+            # label_te = np.concatenate([label_te, new_label_te])
+
+    new_data_te = np.concatenate([
+        data_VBF_SR[idx_VBF_SR_te],
+        data_VBF_BR[idx_VBF_BR_te],
+        data_GGF_SR[idx_GGF_SR_te],
+        data_GGF_BR[idx_GGF_BR_te],
+    ], axis=0)
+    data_te = new_data_te
+
+    new_label_te = np.zeros(new_data_te.shape[0])
+    new_label_te[:n_test] = 1
+    label_te = new_label_te
 
     return data_tr, data_vl, data_te, label_tr, label_vl, label_te
 
@@ -233,13 +245,22 @@ def get_tpr_from_fpr(passing_rate, fpr, tpr):
 
 
 def pt_normalization(X):
-    # input shape: (n, res, res, 2)
+    # input shape: (n, res, res, 3)
     mean = np.mean(X, axis=(1, 2), keepdims=True)
     std = np.std(X, axis=(1, 2), keepdims=True)
     epsilon = 1e-8
     std = np.where(std < epsilon, epsilon, std)
     return (X - mean) / std
 
+
+def pt_scaling(X):
+    # input shape: (n, res, res, 3)
+    # the total scaling of the input
+    mean = np.mean(X, axis=(0, 1, 2), keepdims=True)
+    std = np.std(X, axis=(0, 1, 2), keepdims=True)
+    epsilon = 1e-8
+    std = np.where(std < epsilon, epsilon, std)
+    return (X - mean) / std
 
 def main():
     config_path = sys.argv[1]
@@ -277,10 +298,10 @@ def main():
 
     X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
 
-    # # normalize the datasets
-    # X_train = pt_normalization(X_train)
-    # X_val = pt_normalization(X_val)
-    # X_test = pt_normalization(X_test)
+    # normalize the datasets
+    X_train = pt_normalization(X_train)
+    X_val = pt_normalization(X_val)
+    X_test = pt_normalization(X_test)
 
     train_size = get_sample_size(y_train)
     val_size = get_sample_size(y_val)
