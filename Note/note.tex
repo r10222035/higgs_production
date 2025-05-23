@@ -730,7 +730,7 @@
     \label{sub:without_pre_processing}
         The $\phi$ shifting seems to cancel the $\phi$ translation in the pre-processing. Thus, we expect the model trained on the $\phi$ shifting dataset could perform similarly to the no pre-processing datasets.
 
-        The testing results of the $2q0g$ datasets are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15_w_wo_preprocess}. The performance of pre-processing datasets is generally better than that without pre-processing. The reason may result from the fact that the original datasets are applied pre-processed. Thus, the samples have higher density for the $\phi$ center at 0. The model would prefer to learn these events first.
+        The testing results of the $2q0g$ datasets are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15_w_wo_preprocess}. The performance of pre-processing datasets is generally better than that without pre-processing. The reason may be that the original datasets are applied pre-processed. Thus, the samples have higher density for the $\phi$ center at 0. The model would prefer to learn these events first.
 
         We can train the model on only the augmented datasets to ensure the effect of the original samples.
         \begin{table}[htpb]
@@ -747,6 +747,28 @@
             \end{tabular}
         \end{table}
     % subsection without_pre_processing (end)
+    \subsection{Only augmentation datasets}% (fold)
+    \label{sub:only_augmentation_datasets}
+        In section~\ref{sub:without_pre_processing}, we found that the performance of pre-processing datasets is generally better than that without pre-processing. We train the model on only the augmented datasets to ensure the effect of the original samples.
+
+        The testing results of the only augmented sample are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_only_aug_5_10_15_w_wo_preprocess}. The performance without original samples is similar to that with original samples. It seems that the impact of the original datasets is limited. For 10, 15 augmentation cases, with and without original samples perform almost the same. 
+
+        \begin{table}[htpb]
+            \centering
+            \caption{CNN training results with different augmentation sizes. The ACC and AUC are evaluated based on 10 training. Here, +$x$ contains original and augmented samples; =$x$ contains only augmented samples.}
+            \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_only_aug_5_10_15_w_wo_preprocess}
+            \begin{tabular}{l|cc|cc}
+                         & \multicolumn{2}{c|}{w/ pre-processing}      & \multicolumn{2}{c}{w/o pre-processing}           \\ \hline
+                Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+                +5       & $0.682 \pm 0.011$ & $0.735 \pm 0.013$ & $0.669 \pm 0.011$ & $0.720 \pm 0.015$ \\
+                =5       & $0.682 \pm 0.007$ & $0.736 \pm 0.009$ & $0.668 \pm 0.007$ & $0.718 \pm 0.010$ \\
+                +10      & $0.685 \pm 0.008$ & $0.739 \pm 0.010$ & $0.673 \pm 0.008$ & $0.726 \pm 0.010$ \\
+                =10      & $0.687 \pm 0.010$ & $0.740 \pm 0.012$ & $0.675 \pm 0.009$ & $0.726 \pm 0.011$ \\
+                +15      & $0.688 \pm 0.007$ & $0.743 \pm 0.009$ & $0.674 \pm 0.008$ & $0.726 \pm 0.008$ \\
+                =15      & $0.687 \pm 0.007$ & $0.741 \pm 0.010$ & $0.672 \pm 0.009$ & $0.725 \pm 0.012$
+            \end{tabular}
+        \end{table}
+    % subsection only_augmentation_datasets (end)
 % section data_augmentation (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
