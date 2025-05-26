@@ -749,7 +749,7 @@
     % subsection without_pre_processing (end)
     \subsection{Only augmentation datasets}% (fold)
     \label{sub:only_augmentation_datasets}
-        In section~\ref{sub:without_pre_processing}, we found that the performance of pre-processing datasets is generally better than that without pre-processing. We train the model on only the augmented datasets to ensure the effect of the original samples.
+        In section~\ref{sub:without_pre_processing}, we found that the performance of pre-processing datasets is generally better than without pre-processing. We train the model on only the augmented datasets to ensure the effect of the original samples.
 
         The testing results of the only augmented sample are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_only_aug_5_10_15_w_wo_preprocess}. The performance without original samples is similar to that with original samples. It seems that the impact of the original datasets is limited. For 10, 15 augmentation cases, with and without original samples perform almost the same. 
 
@@ -770,6 +770,61 @@
         \end{table}
     % subsection only_augmentation_datasets (end)
 % section data_augmentation (end)
+\section{Removing photon information}% (fold)
+\label{sec:removing_photon_information}
+    To investigate the role of photon information in model training, we conduct two exercises:
+    \begin{itemize}
+        \item \textbf{Case 1:} Remove both the photon channel and photon features in the Tower channel.
+        \item \textbf{Case 2:} Remove the photon channel.
+        \item \textbf{Case 3:} Remove the photon features in the Tower channel.
+    \end{itemize}
+
+    We consider the $2q0g$ datasets. The training results are summarized in Tables~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon}, \ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon_channel}, and \ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon_case3}. 
+    \begin{table}[htpb]
+        \centering
+        \caption{CNN training results with both the photon channel and Tower photon features removed (Case 1). The ACC and AUC are evaluated based on 10 training.}
+        \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon}
+        \begin{tabular}{l|cc|cc}
+                     & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+            Original & $0.633 \pm 0.005$ & $0.664 \pm 0.008$ & $0.690 \pm 0.005$ & $0.750 \pm 0.008$ \\
+            +5       & $0.644 \pm 0.004$ & $0.687 \pm 0.005$ & $0.693 \pm 0.007$ & $0.746 \pm 0.006$ \\
+            +10      & $0.645 \pm 0.004$ & $0.689 \pm 0.005$ & $0.697 \pm 0.009$ & $0.751 \pm 0.011$ \\
+            +15      & $0.645 \pm 0.004$ & $0.689 \pm 0.005$ & $0.698 \pm 0.009$ & $0.753 \pm 0.010$
+        \end{tabular}
+    \end{table}
+
+    \begin{table}[htpb]
+        \centering
+        \caption{CNN training results with only the photon channel removed (Case 2). The ACC and AUC are evaluated based on 10 training.}
+        \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon_channel}
+        \begin{tabular}{l|cc|cc}
+                     & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+            Original & $0.621 \pm 0.005$ & $0.640 \pm 0.008$ & $0.661 \pm 0.007$ & $0.715 \pm 0.010$ \\
+            +5       & $0.636 \pm 0.004$ & $0.673 \pm 0.006$ & $0.673 \pm 0.009$ & $0.727 \pm 0.011$ \\
+            +10      & $0.639 \pm 0.004$ & $0.677 \pm 0.005$ & $0.677 \pm 0.007$ & $0.728 \pm 0.010$ \\
+            +15      & $0.640 \pm 0.005$ & $0.679 \pm 0.007$ & $0.678 \pm 0.007$ & $0.731 \pm 0.010$
+        \end{tabular}
+    \end{table}
+
+    \begin{table}[htpb]
+        \centering
+        \caption{CNN training results with the Tower photon features removed (Case 3). The ACC and AUC are evaluated based on 10 training.}
+        \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_eta_phi_aug_5_10_15_remove_photon_case3}
+        \begin{tabular}{l|cc|cc}
+                     & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+            Original & $0.629 \pm 0.004$ & $0.653 \pm 0.006$ & $0.670 \pm 0.008$ & $0.726 \pm 0.009$ \\
+            % +5       & $0.636 \pm 0.004$ & $0.673 \pm 0.006$ & $0.673 \pm 0.009$ & $0.727 \pm 0.011$ \\
+            % +10      & $0.639 \pm 0.004$ & $0.677 \pm 0.005$ & $0.677 \pm 0.007$ & $0.728 \pm 0.010$ \\
+            % +15      & $0.640 \pm 0.005$ & $0.679 \pm 0.007$ & $0.678 \pm 0.007$ & $0.731 \pm 0.010$
+        \end{tabular}
+    \end{table}
+
+    Case 1 leads the performance improvement compared to the full-feature baseline (Table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}). Case 2 shows a little better performance of the all-feature input case. Case 3 demonstrates more improvement than case 2 but still worse than case 1.
+
+% section removing_photon_information (end)
 \bibliographystyle{ieeetr}
 \bibliography{reference}
 
