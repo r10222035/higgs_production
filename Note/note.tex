@@ -816,15 +816,61 @@
                      & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
             Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
             Original & $0.629 \pm 0.004$ & $0.653 \pm 0.006$ & $0.670 \pm 0.008$ & $0.726 \pm 0.009$ \\
-            % +5       & $0.636 \pm 0.004$ & $0.673 \pm 0.006$ & $0.673 \pm 0.009$ & $0.727 \pm 0.011$ \\
-            % +10      & $0.639 \pm 0.004$ & $0.677 \pm 0.005$ & $0.677 \pm 0.007$ & $0.728 \pm 0.010$ \\
-            % +15      & $0.640 \pm 0.005$ & $0.679 \pm 0.007$ & $0.678 \pm 0.007$ & $0.731 \pm 0.010$
+            +5       & $0.642 \pm 0.005$ & $0.682 \pm 0.008$ & $0.690 \pm 0.010$ & $0.742 \pm 0.011$ \\
+            +10      & $0.644 \pm 0.003$ & $0.686 \pm 0.004$ & $0.692 \pm 0.006$ & $0.746 \pm 0.008$ \\
+            +15      & $0.645 \pm 0.005$ & $0.687 \pm 0.007$ & $0.690 \pm 0.007$ & $0.745 \pm 0.007$
         \end{tabular}
     \end{table}
 
-    Case 1 leads the performance improvement compared to the full-feature baseline (Table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}). Case 2 shows a little better performance of the all-feature input case. Case 3 demonstrates more improvement than case 2 but still worse than case 1.
+    Case 1 leads the performance improvement compared to the full-feature baseline (Table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}). Case 2 shows a little better performance of the all-feature input case. Case 3 demonstrates more improvement than case 2 but is still worse than case 1.
 
 % section removing_photon_information (end)
+\section{Various decay channels}% (fold)
+\label{sec:various_decay_channels}
+    In this section, we consider $H \to W^+W^-$, $H \to ZZ$, and $H \to \tau^+ \tau^-$.
+
+    \subsection{Final state}% (fold)
+    \label{sub:final_state}
+
+        Unlike the $H \to \gamma\gamma$ analysis, the final states of $H \to WW^*$, $ZZ^*$, and $\tau^+\tau^-$ are more diverse. Each decay mode offers several final-state configurations, depending on whether the intermediate particles decay leptonically or hadronically.
+
+        \subsubsection{\texorpdfstring{$H \to WW^*$}{H to WW}}% (fold)
+        \label{subs:h_to_ww}
+            \begin{itemize}
+                \item \textbf{Fully leptonic:} $H \to WW^* \to \ell\nu \ell\nu$
+                \item \textbf{Semi-leptonic:} $H \to WW^* \to \ell\nu jj$
+                \item \textbf{Fully hadronic:} $H \to WW^* \to jjjj$
+            \end{itemize}
+        % subsubsection h_to_ww (end)
+        \subsubsection{\texorpdfstring{$H \to ZZ^*$}{H to ZZ}}% (fold)
+        \label{subs:h_to_zz}
+            \begin{itemize}
+                \item \textbf{Fully leptonic:} $H \to ZZ^* \to 4\ell$
+                \item \textbf{Semi-leptonic:} $H \to ZZ^* \to 2\ell 2j$
+                \item \textbf{Invisible + leptonic:} $H \to ZZ^* \to 2\ell 2\nu$
+                \item \textbf{Fully hadronic:} $H \to ZZ^* \to 4j$
+            \end{itemize}
+        % subsubsection h_to_zz (end)
+        \subsubsection{\texorpdfstring{$H \to \tau^+\tau^-$}{H to tau tau}}% (fold)
+        \label{subs:h_to_tau_tau}
+            \begin{itemize}
+                \item \textbf{Leptonic--Leptonic:} $H \to \tau^+ \tau^- \to \ell \nu \bar{\nu} \; \ell \nu \bar{\nu}$
+                \item \textbf{Leptonic--Hadronic:} $H \to \tau^+ \tau^- \to \ell \nu \bar{\nu} \; \tau_{\text{had}}$
+                \item \textbf{Hadronic--Hadronic:} $H \to \tau^+ \tau^- \to \tau_{\text{had}} \tau_{\text{had}}$
+            \end{itemize}
+        % subsubsection h_to_tau_tau (end)	
+        
+    % subsection final_state (end)
+    \subsection{Pre-selection cuts}% (fold)
+    \label{sub:pre_selection_cuts}
+        Each decay mode requires tailored pre-selection cuts to suppress background while retaining a reasonable signal efficiency. Some considerations:
+
+        \begin{itemize}
+            \item How should pre-selection cuts be defined for each decay channel? 
+            \item Should we unify pre-selection criteria to allow CNN to transfer across channels? \\
+        \end{itemize}
+    % subsection pre_selection_cuts (end)
+
 \bibliographystyle{ieeetr}
 \bibliography{reference}
 
