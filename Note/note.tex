@@ -92,7 +92,7 @@
 
 \section{Higgs Production}% (fold)
 \label{sec:higgs_production}
-    We want to apply deep learning methods to distinguish vector boson fusion (VBF) from gluon-gluon fusion (GGF) and Higgs production at the LHC.
+    We aim to apply deep learning methods to distinguish vector boson fusion (VBF) from gluon-gluon fusion (GGF) and Higgs production at the Large Hadron Collider (LHC).
 
     We want to apply the CWoLa method, so we can use the real data without knowing the true label.
 % section higgs_production (end)
@@ -825,6 +825,7 @@
     Case 1 leads the performance improvement compared to the full-feature baseline (Table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}). Case 2 shows a little better performance of the all-feature input case. Case 3 demonstrates more improvement than case 2 but is still worse than case 1.
 
 % section removing_photon_information (end)
+    
 \section{Various decay channels}% (fold)
 \label{sec:various_decay_channels}
     In this section, we consider $H \to W^+W^-$, $H \to ZZ$, and $H \to \tau^+ \tau^-$.
@@ -832,7 +833,7 @@
     \subsection{Final state}% (fold)
     \label{sub:final_state}
 
-        Unlike the $H \to \gamma\gamma$ analysis, the final states of $H \to WW^*$, $ZZ^*$, and $\tau^+\tau^-$ are more diverse. Each decay mode offers several final-state configurations, depending on whether the intermediate particles decay leptonically or hadronically.
+        Unlike the $ H\to\gamma\gamma$ analysis, the final states of $H \to WW^*$, $ZZ^*$, and $\tau^+\tau^-$ are more diverse. Each decay mode offers several final-state configurations, depending on whether the intermediate particles decay leptonically or hadronically.
 
         \subsubsection{\texorpdfstring{$H \to WW^*$}{H to WW}}% (fold)
         \label{subs:h_to_ww}
@@ -869,7 +870,37 @@
             \item How should pre-selection cuts be defined for each decay channel? 
             \item Should we unify pre-selection criteria to allow CNN to transfer across channels? \\
         \end{itemize}
+
+        Answers:
+        \begin{itemize}
+            \item Consider the \textbf{Fully leptonic:} $H \to ZZ^* \to 4\ell$ channel. Only require the number of leptons and jets.
+            \item The invariant mass cuts can be removed.
+        \end{itemize}
     % subsection pre_selection_cuts (end)
+% section various_decay_channels (end)
+
+\section{\texorpdfstring{$\phi$}{phi} shifting with fixed angle}% (fold)
+\label{sec:phi_shifting_with_fixed_angle}
+
+    In section~\ref{sub:phi_shifting}, we implemented $\phi$-shifting augmentation using a random rotation angle for each event. In this section, we consider shifting the azimuthal angle $\phi$ by fixed values and investigate its effect on training performance.
+
+    The training results on the $2q0g$ dataset are summarized in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_fix_30_45_60_90}. We find that using fixed-angle $\phi$ shifts yields performance comparable to the random-angle augmentation results shown previously in table~\ref{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}.
+    \begin{table}[htpb]
+        \centering
+        \caption{CNN training results using fixed-angle $\phi$-shifting augmentation. Here, $360/\theta$ denotes that events were augmented using rotation angles of $\theta$, $2\theta$, ..., up to $360^\circ$. The ACC and AUC are evaluated based on 10 training.}
+        \label{tab:CWoLa_CNN_training_results_3000_jet_tagging_phi_aug_fix_30_45_60_90}
+        \begin{tabular}{l|cc|cc}
+                     & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+            Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+            Original & $0.615 \pm 0.005$ & $0.632 \pm 0.007$ & $0.650 \pm 0.011$ & $0.703 \pm 0.015$ \\
+            360/90   & $0.637 \pm 0.005$ & $0.675 \pm 0.007$ & $0.684 \pm 0.010$ & $0.739 \pm 0.012$ \\
+            360/60   & $0.642 \pm 0.003$ & $0.682 \pm 0.005$ & $0.689 \pm 0.007$ & $0.745 \pm 0.010$ \\
+            360/45   & $0.643 \pm 0.003$ & $0.685 \pm 0.004$ & $0.689 \pm 0.008$ & $0.742 \pm 0.012$ \\
+            360/30   & $0.643 \pm 0.006$ & $0.684 \pm 0.009$ & $0.688 \pm 0.007$ & $0.744 \pm 0.008$
+        \end{tabular}
+    \end{table}
+
+% section phi_shifting_with_fixed_angle (end)
 
 \bibliographystyle{ieeetr}
 \bibliography{reference}
