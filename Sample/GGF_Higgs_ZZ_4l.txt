@@ -1,0 +1,20 @@
+import model loop_sm
+generate p p > h > l+ l- l+ l- QCD=0 QED<=4 [noborn=QCD]
+output GGF_Higgs_ZZ_4l
+launch GGF_Higgs_ZZ_4l
+
+shower=Pythia8
+detector=Delphes
+analysis=OFF
+madspin=OFF
+done
+
+Cards/delphes_card.dat
+
+set run_card nevents 10000
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+
+set run_card use_syst False
+
+done

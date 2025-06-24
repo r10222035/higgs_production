@@ -1,0 +1,20 @@
+define v = w+ w- z
+generate p p > h j j $$v, (h > z z , z > l+ l- , z > l+ l-) QCD<=99
+output VBF_Higgs_ZZ_4l
+launch VBF_Higgs_ZZ_4l
+
+shower=Pythia8
+detector=Delphes
+analysis=OFF
+madspin=OFF
+done
+
+Cards/delphes_card.dat
+
+set run_card nevents 10000
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+
+set run_card use_syst False
+
+done
