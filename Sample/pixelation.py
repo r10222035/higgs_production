@@ -3,6 +3,7 @@
 # python pixelation.py <h5_path> <output_path> <resolution>
 # python pixelation.py ./data/mjj_cut/pre-processing/GGF_in_BR.h5 ./data/mjj_cut/pre-processing/40x40/GGF_in_BR.npy 40
 
+from math import pi
 import os
 import sys
 import h5py
@@ -42,7 +43,10 @@ def from_h5_to_npy(h5_path, output_path, res=75):
         print('Computing the histogram')
         hpT0 = pixelization(f['TOWER/pt'], f['TOWER/eta'], f['TOWER/phi'], res)
         hpT1 = pixelization(f['TRACK/pt'], f['TRACK/eta'], f['TRACK/phi'], res)
-        hpT2 = pixelization(f['PHOTON/pt'], f['PHOTON/eta'], f['PHOTON/phi'], res)
+        try:
+            hpT2 = pixelization(f['PHOTON/pt'], f['PHOTON/eta'], f['PHOTON/phi'], res)
+        except:
+            hpT2 = pixelization(f['LEPTON/pt'], f['LEPTON/eta'], f['LEPTON/phi'], res)
 
         # 將結果堆疊起來
         # data shpae: (nevent, res, res, 3)

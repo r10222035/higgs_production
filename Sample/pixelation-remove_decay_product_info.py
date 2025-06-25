@@ -5,7 +5,6 @@
 
 import os
 import sys
-from unittest import case
 import h5py
 
 import numpy as np
@@ -43,7 +42,10 @@ def from_h5_to_npy(h5_path, output_path, res=75, case=0):
         print('Computing the histogram')
         hpT0 = pixelization(f['TOWER/pt'], f['TOWER/eta'], f['TOWER/phi'], res)
         hpT1 = pixelization(f['TRACK/pt'], f['TRACK/eta'], f['TRACK/phi'], res)
-        hpT2 = pixelization(f['PHOTON/pt'], f['PHOTON/eta'], f['PHOTON/phi'], res)
+        try:
+            hpT2 = pixelization(f['PHOTON/pt'], f['PHOTON/eta'], f['PHOTON/phi'], res)
+        except:
+            hpT2 = pixelization(f['LEPTON/pt'], f['LEPTON/eta'], f['LEPTON/phi'], res)
 
         # 將結果堆疊起來
         # data shpae: (nevent, res, res, 2)
@@ -56,6 +58,8 @@ def from_h5_to_npy(h5_path, output_path, res=75, case=0):
             data = np.stack([hpT0, hpT1], axis=-1)
         elif case == 3:
             data = np.stack([hpT0 - hpT2, hpT1, hpT2], axis=-1)
+        elif case == 4:
+            data = np.stack([hpT0, hpT1 - hpT2], axis=-1)
         else:
             raise ValueError(f'Unknown case {case}')
         label = f['EVENT/type'][:]
