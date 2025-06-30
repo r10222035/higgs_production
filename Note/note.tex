@@ -1043,6 +1043,26 @@
         \end{table}
         These results indicate that, although the classifier performs well on its original $H \to \gamma\gamma$ dataset, its performance degrades when applied to the $ H\to ZZ^* \to 4\ell$ events. This suggests that even after removing photon-related features, the learned representation may still carry decay-mode-specific biases that affect cross-channel transferability.
     % subsection testing_results_of_di_photon_classifier (end)
+    \subsection{Testing results of supervised classifier}% (fold)
+    \label{sub:testing_results_of_supervised_classifier}
+		We train supervised CNN models separately on two Higgs decay channels. The training, validation, and testing dataset sizes are identical to those listed in table~\ref{tab:supervised_sample_size}. Only events that pass all selection requirements are used. Importantly, all input features directly associated with the decay products are removed.
+
+		Table~\ref{tab:supervised_CNN_training_results_remove_product_diphoton_ZZ4l} summarizes the classification results. Each model is trained on one decay mode and evaluated on both $H \to \gamma\gamma$ and $H \to ZZ^* \to 4\ell$ datasets.
+        \begin{table}[htpb]
+            \centering
+            \caption{CNN classification results with decay product information removed. Each model is trained on one decay channel and tested on both $H \to \gamma\gamma$ and $ H\to ZZ^* \to 4\ell$. Results are averaged over 10 training runs.}
+            \label{tab:supervised_CNN_training_results_remove_product_diphoton_ZZ4l}
+            \begin{tabular}{l|cc|cc}
+                                     &\multicolumn{2}{c|}{$H\to\gamma\gamma$}&\multicolumn{2}{c}{$H\to ZZ^*\to 4\ell$}\\ \hline
+                Training channel     & ACC               & AUC               & ACC               & AUC                \\ \hline
+                $H\to\gamma\gamma$   & $0.775 \pm 0.001$ & $0.852 \pm 0.001$ & $0.676 \pm 0.010$ & $0.730 \pm 0.015$  \\
+                $H\to ZZ^*\to 4\ell$ & $0.731 \pm 0.004$ & $0.800 \pm 0.005$ & $0.841 \pm 0.001$ & $0.919 \pm 0.001$ 
+            \end{tabular}
+        \end{table}
+		Compared to the results in table~\ref{tab:supervised_CNN_training_results}, the di-photon classifier shows slightly worse performance due to the exclusion of photon-specific information.
+
+		Although both models are trained without decay product features, the CNN still captures decay-mode-specific differences. Moreover, the model trained on $H \to ZZ^* \to 4\ell$ generalizes better to the $H \to \gamma\gamma$ dataset than the reverse case. This asymmetry may be attributed to the overall better training performance in the $H \to ZZ^* \to 4\ell$ mode, suggesting that a stronger model leads to better transferability.
+    % subsection testing_results_of_supervised_classifier (end)
 
 % section h_to_zz_to_4l_channel (end)
 
