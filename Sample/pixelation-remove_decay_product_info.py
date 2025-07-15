@@ -60,6 +60,10 @@ def from_h5_to_npy(h5_path, output_path, res=75, case=0):
             data = np.stack([hpT0 - hpT2, hpT1, hpT2], axis=-1)
         elif case == 4:
             data = np.stack([hpT0, hpT1 - hpT2], axis=-1)
+        elif case == 5:
+            hpT0[hpT2 != 0] = 0
+            hpT1[hpT2 != 0] = 0
+            data = np.stack([hpT0, hpT1], axis=-1)
         else:
             raise ValueError(f'Unknown case {case}')
         label = f['EVENT/type'][:]
