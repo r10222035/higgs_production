@@ -60,6 +60,54 @@ class CNN(tf.keras.Model):
         return output
 
 
+class EventCNN(tf.keras.Model):
+    def __init__(self, name='EventCNN'):
+        super(EventCNN, self).__init__(name=name)
+
+        self.bn = tf.keras.layers.BatchNormalization()
+
+        self.block1 = tf.keras.Sequential([
+            tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
+            tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+            tf.keras.layers.MaxPool2D((3, 3)),
+        ])
+
+        self.block2 = tf.keras.Sequential([
+            tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
+            tf.keras.layers.Conv2D(64, (3, 3), padding='same',activation='relu'),
+        ])
+
+        self.block3 = tf.keras.Sequential([
+            tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
+            tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
+        ])
+
+        self.block4 = tf.keras.Sequential([
+            tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+            tf.keras.layers.GlobalAveragePooling2D(),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dropout(0.1),
+            tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.Dropout(0.1),
+            tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.Dense(1, activation='sigmoid'),
+        ])
+
+    @tf.function
+    def call(self, inputs, training=False):
+
+        x = self.bn(inputs)
+        x1 = self.block1(x)
+        x2 = self.block2(x1)
+        x3 = tf.keras.layers.Add()([x1, x2])
+        x4 = self.block3(x3)
+        x5 = tf.keras.layers.Add()([x3, x4])
+        output = self.block4(x5)
+
+        return output
+    
+
 def get_highest_accuracy(y_true, y_pred):
     _, _, thresholds = roc_curve(y_true, y_pred)
     # compute highest accuracy
@@ -102,6 +150,7 @@ def main():
     n_test = config['n_test']
 
     model_name = config['model_name']
+    model_structure = config['model_structure']
     sample_type = config['sample_type']
 
     with open('params.json', 'r') as f:
@@ -145,7 +194,12 @@ def main():
         valid_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
         valid_dataset = valid_dataset.batch(BATCH_SIZE)
 
-    model = CNN()
+    if model_structure == 'CNN':
+        model = CNN(name=model_name)
+    elif model_structure == 'event-CNN':
+        model = EventCNN()
+    else:
+        raise ValueError(f'Unknown model name: {model_name}')
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
                   metrics=['accuracy'])
