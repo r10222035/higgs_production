@@ -1112,6 +1112,47 @@
     % subsection logarithmic_transverse_momentum (end)
 
 % section larger_training_dataset (end)
+\section{Event-CNN}% (fold)
+\label{sec:event_cnn}
+	We test an alternative network structure known as the event-CNN, as proposed in Ref.~\cite{Chiang:2022lsn}.
+	\subsection{Supervised training with event-CNN}% (fold)
+	\label{sub:supervised_training_with_event_cnn}
+		We apply the event-CNN architecture to supervised classification tasks. The training, validation, and testing dataset sizes are identical to those listed in table~\ref{tab:supervised_sample_size}. Only events passing all selection criteria are used in training.
+
+		Table~\ref{tab:supervised_event_CNN_training_results_diphoton} summarizes the classification performance.
+        \begin{table}[htpb]
+            \centering
+            \caption{Event-CNN classification results. Results are averaged over 10 training runs.}
+            \label{tab:supervised_event_CNN_training_results_diphoton}
+            \begin{tabular}{c|c}
+				 ACC               & AUC               \\ \hline
+				 $0.792 \pm 0.001$ & $0.871 \pm 0.001$ \\
+			\end{tabular}
+        \end{table}
+		Compared to the previous CNN results shown in table~\ref{tab:supervised_CNN_training_results}, the event-CNN achieves slightly better performance.
+	% subsection supervised_training_with_event_cnn (end)
+	\subsection{CWoLa training with event-CNN}% (fold)
+	\label{sub:cwola_training_with_event_cnn}
+		We consider the di-photon case mentioned in section~\ref{sec:use_jet_tagging_results_to_construct_mixed_datasets}. We also apply the $\phi$-shifting augmentation technique introduced in section~\ref{sub:phi_shifting}.
+		
+		Table~\ref{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15} summarizes the training results using the $2q0g$ dataset with $\phi$-shifting augmentation.
+        \begin{table}[htpb]
+            \centering
+            \caption{CNN training results with different augmentation sizes. The ACC and AUC are evaluated based on 10 training.}
+            \label{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_phi_aug_5_10_15}
+            \begin{tabular}{l|cc|cc}
+                         & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+                Original & $0.624 \pm 0.011$ & $0.644 \pm 0.021$ & $0.679 \pm 0.009$ & $0.739 \pm 0.012$ \\
+                +5       & $0.649 \pm 0.004$ & $0.691 \pm 0.005$ & $0.681 \pm 0.005$ & $0.739 \pm 0.005$ \\
+                +10      & $0.650 \pm 0.004$ & $0.692 \pm 0.004$ & $0.678 \pm 0.007$ & $0.735 \pm 0.010$ \\
+                +15      & $0.651 \pm 0.004$ & $0.694 \pm 0.005$ & $0.676 \pm 0.006$ & $0.732 \pm 0.007$
+            \end{tabular}
+        \end{table}
+		Although $\phi$-shifting improves model performance on mixed datasets, the enhancement saturates as the dataset size increases. Notably, on pure samples, the performance remains similar regardless of augmentation, indicating that the gain is primarily due to over-fitting on mixed datasets.
+	% subsection cwola_training_with_event_cnn (end)
+% section event_cnn (end)
+
 
 \bibliographystyle{ieeetr}
 \bibliography{reference}
