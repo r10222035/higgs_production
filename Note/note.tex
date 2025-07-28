@@ -964,11 +964,11 @@
             \item $n_{j}$ cut: The number of jets should be at least 2.
         \end{itemize}
 
-        Table~\ref{tab:GGF_VBF_Higgs_cutflow_number} summarizes the cutflow number at different selection cuts.
+        Table~\ref{tab:GGF_VBF_Higgs_cutflow_number_ZZ4l} summarizes the cutflow number at different selection cuts.
         \begin{table}[htpb]
             \centering
             \caption{Number of passing events and passing rates for GGF and VBF Higgs production at different selection cuts.}
-            \label{tab:GGF_VBF_Higgs_cutflow_number}
+            \label{tab:GGF_VBF_Higgs_cutflow_number_ZZ4l}
             \begin{tabular}{l|rr|rr}
                 Cut         & GGF   & pass rate & VBF   & pass rate \\ \hline
                 Total       & 10000 & 1         & 10000 & 1         \\
@@ -977,12 +977,12 @@
             \end{tabular}
         \end{table}
 
-        The branching ratio for the 4-lepton channel is $\Gamma\left( h \to 4\ell, \ell = e, \mu \right) = 1.240 \times 10^{-4}$, as given in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR}{this link}. Assuming the luminosity of $\mathcal{L} = \text{3000 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. The SR and BR are defined based on the number of gluon jets $n_g$ and quark jets $n_q$. The selection results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset_gluon_jet}.
+        The branching ratio for the 4-lepton channel is $\Gamma\left( h \to 4\ell, \ell = e, \mu \right) = 1.240 \times 10^{-4}$, as given in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR}{this link}. Assuming the luminosity of $\mathcal{L} = \text{3000 fb}^{-1}$, we can estimate the number of events belonging to the SR and BR. The SR and BR are defined based on the number of gluon jets $n_g$ and quark jets $n_q$. The selection results are summarized in table~\ref{tab:number_of_event_in_mixed_dataset_gluon_jet_ZZ4l}.
 
         \begin{table}[htpb]
             \centering
             \caption{The number of events of mixed datasets under different selection cuts. Here, $agbq$ means that $n_g=a, n_q=b$.}
-            \label{tab:number_of_event_in_mixed_dataset_gluon_jet}
+            \label{tab:number_of_event_in_mixed_dataset_gluon_jet_ZZ4l}
             \subfloat[SR: $2q0g$; \\ BR: $1q1g, 0q2g$]{
                 \begin{tabular}{c|cc}
                        & GGF   & VBF     \\ \hline
@@ -1151,6 +1151,40 @@
         \end{table}
 		Although $\phi$-shifting improves model performance on mixed datasets, the enhancement saturates as the dataset size increases. Notably, on pure samples, the performance remains similar regardless of augmentation, indicating that the gain is primarily due to over-fitting on mixed datasets.
 	% subsection cwola_training_with_event_cnn (end)
+    \subsection{Remove photon information with event-CNN}% (fold)
+    \label{sub:remove_photon_information_with_event_cnn}
+        To investigate the role of photon inputs in training, we apply the event-CNN model to the Case 1 datasets described in section~\ref{sec:removing_photon_information}.
+
+        We use the $2q0g$ datasets for evaluation. The training results are summarized in table~\ref{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_eta_phi_case1}.
+        \begin{table}[htpb]
+            \centering
+            \caption{Event-CNN training results with both the photon channel and Tower photon features removed (Case 1). The ACC and AUC are evaluated based on 10 training.}
+            \label{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_eta_phi_case1}
+            \begin{tabular}{l|cc|cc}
+                         & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+                Original & $0.624 \pm 0.011$ & $0.644 \pm 0.021$ & $0.679 \pm 0.009$ & $0.739 \pm 0.012$ \\
+                Case 1   & $0.637 \pm 0.012$ & $0.667 \pm 0.020$ & $0.682 \pm 0.004$ & $0.740 \pm 0.005$ \\
+            \end{tabular}
+        \end{table}
+        The training performance is almost the same, suggesting that the model can still extract discriminative features from the jet pattern alone.
+    % subsection remove_photon_information_with_event_cnn (end)
+    \subsection{Larger training set with event-CNN}% (fold)
+    \label{sub:larger_training_set_with_event_cnn}
+        We also study the effect of dataset size on the model's performance. The event-CNN is trained using the $2q0g$ datasets corresponding to different integrated luminosities, while keeping photon information included. The results are summarized in table~\ref{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_L_3000_12000}.
+        \begin{table}[htpb]
+            \centering
+            \caption{Event-CNN training results with different dataset sizes corresponding to various luminosities. Each model is trained with photon information included. The ACC and AUC are evaluated over 10 training runs.}
+            \label{tab:CWoLa_event_CNN_training_results_3000_jet_tagging_L_3000_12000}
+            \begin{tabular}{l|cc|cc}
+                                        & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Luminosity (fb$^{-1}$)  & ACC               & AUC               & ACC               & AUC               \\ \hline
+                3000                    & $0.624 \pm 0.011$ & $0.644 \pm 0.021$ & $0.679 \pm 0.009$ & $0.739 \pm 0.012$ \\
+                12000                   & $0.655 \pm 0.002$ & $0.701 \pm 0.003$ & $0.683 \pm 0.004$ & $0.742 \pm 0.005$
+            \end{tabular}
+        \end{table}
+        The performance improved with increased dataset size in the $M_1 / M_2$ scenario. However, for the pure datasets, the training performance is almost the same.
+    % subsection larger_training_set_with_event_cnn (end)
 % section event_cnn (end)
 
 
