@@ -1187,6 +1187,14 @@
             \end{tabular}
         \end{table}
         The performance improved with increased dataset size. For the pure datasets, the training performance is saturated after $3000 \text{ fb}^{-1}$.
+
+        We repeat the analysis using datasets where photon information has been removed. The comparison between the two scenarios is shown in figure~\ref{fig:eventCNN_AUC_various_L}. In the high-luminosity regime, the model performance is similar regardless of whether photon information is included. However, at lower luminosities, datasets without photon information unexpectedly yield better AUC.
+        \begin{figure}[htpb]
+            \centering
+            \includegraphics[width=0.60\textwidth]{event_CNN_AUC-true_L.pdf}
+            \caption{AUC comparison for Event-CNN models trained with and without photon information across different luminosities. The average and standard deviation are evaluated over 10 training runs.}
+            \label{fig:eventCNN_AUC_various_L}
+        \end{figure}
     % subsection various_training_size_with_event_cnn (end)
     \subsection{\texorpdfstring{$H \to ZZ^* \to 4\ell$}{H to ZZ to 4l} channel}% (fold)
     \label{sub:h_to_zz_to_4l_channel}
@@ -1217,7 +1225,7 @@
                 w/o lepton & $0.606 \pm 0.010$ & $0.626 \pm 0.012$ & $0.645 \pm 0.006$ & $0.697 \pm 0.009$
             \end{tabular}
         \end{table}
-        The performance is worse by 10\% for pure events when lepton information is removed, indicating that some of the discriminative features are removed.
+        The performance is 10% worse for pure events when lepton information is removed, indicating that some of the discriminative features are removed.
     % subsection h_to_zz_to_4l_channel (end)
 % section event_cnn (end)
 
