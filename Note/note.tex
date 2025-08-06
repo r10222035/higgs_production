@@ -1265,6 +1265,29 @@
 
         This suggests that, by leveraging both dataset augmentation and transfer learning, we can effectively simulate the performance equivalent to having approximately 29900~fb$^{-1}$ of additional data. This approach offers a practical path to improving tagger performance in channels with limited statistics.
     % subsection h_to_zz_to_4l_channel (end)
+    \subsection{Supervised learning without photon information}% (fold)
+    \label{sub:supervised_learning_without_photon_information}
+        We perform the supervised training of the event-CNN without photon information to explore the importance of the photon-related features.
+
+        Table~\ref{tab:supervised_event_CNN_training_results_diphoton_w_wo_photon} and figure~\ref{fig:eventCNN_roc_curve} summarize the training results. 
+        \begin{table}[htpb]
+            \centering
+            \caption{Event-CNN classification results. Results are averaged over 10 training runs. The 10 training runs use the same dataset, only the initial weights are different.}
+            \label{tab:supervised_event_CNN_training_results_diphoton_w_wo_photon}
+            \begin{tabular}{c|cc}
+                 Datasets  & ACC               & AUC               \\ \hline
+                 w/ photon & $0.792 \pm 0.001$ & $0.871 \pm 0.001$ \\
+                 w/o photon & $0.784 \pm 0.001$ & $0.862 \pm 0.001$ \\
+			\end{tabular}
+        \end{table}
+        The event-CNN achieves slightly better performance when photon information is included. However, the small difference in AUC indicates that the model is still able to extract meaningful features from the jet pattern.
+        \begin{figure}[htpb]
+            \centering
+            \includegraphics[width=0.60\textwidth]{roc_curve_supervised.pdf}
+            \caption{ROC curves for event-CNN models trained with and without photon information.}
+            \label{fig:eventCNN_roc_curve}
+        \end{figure}
+    % subsection supervised_learning_without_photon_information (end)
 % section event_cnn (end)
 
 
