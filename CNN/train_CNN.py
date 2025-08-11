@@ -9,14 +9,12 @@ import json
 import shutil
 import datetime
 
-from hepunits import deca
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
-from zmq import Event
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 

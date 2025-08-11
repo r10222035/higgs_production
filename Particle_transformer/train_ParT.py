@@ -30,12 +30,19 @@ MAX_CONSTI = {
 }
 
 
-def prepare_feature_from_h5(h5_file):
+def prepare_feature_from_h5(h5_file, remove_decay_products=False):
     with h5py.File(h5_file, 'r') as f:
         event_pt = np.concatenate([f['TOWER/pt'][:], f['TRACK/pt'][:], f['PHOTON/pt'][:]], axis=1)
         event_eta = np.concatenate([f['TOWER/eta'][:], f['TRACK/eta'][:], f['PHOTON/eta'][:]], axis=1)
         event_phi = np.concatenate([f['TOWER/phi'][:], f['TRACK/phi'][:], f['PHOTON/phi'][:]], axis=1)
         event_mask = np.concatenate([f['TOWER/mask'][:], f['TRACK/mask'][:], np.tile([True, True], (event_pt.shape[0], 1))], axis=1)
+
+        if remove_decay_products:
+            photon_eta = f['PHOTON/eta'][:]
+            photon_phi = f['PHOTON/phi'][:]
+            indices = np.where((event_eta[:, :, None] == photon_eta[:, None, :]) & (event_phi[:, :, None] == photon_phi[:, None, :]))
+            event_mask[indices[0], indices[1]] = False
+
         event_pt[event_mask == False] = float('nan')
         event_eta[event_mask == False] = float('nan')
         event_phi[event_mask == False] = float('nan')
@@ -52,7 +59,7 @@ def prepare_feature_from_h5(h5_file):
     return features
 
 
-def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0):
+def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0, remove_decay_products=False):
     # h5_dirs: list of npy directories
     # nevents: tuple of (n_VBF_SR, n_VBF_BR, n_GGF_SR, n_GGF_BR)
     # ratios: tuple of (r_train, r_val)
@@ -60,10 +67,10 @@ def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), see
     label_tr, label_vl, label_te = None, None, None
 
     h5_dir0 = Path(h5_dirs[0])
-    data_VBF_SR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_SR.h5')
-    data_VBF_BR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_BR.h5')
-    data_GGF_SR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_SR.h5')
-    data_GGF_BR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_BR.h5')
+    data_VBF_SR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_SR.h5', remove_decay_products)
+    data_VBF_BR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_BR.h5', remove_decay_products)
+    data_GGF_SR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_SR.h5', remove_decay_products)
+    data_GGF_BR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_BR.h5', remove_decay_products)
     n_data_VBF_SR = data_VBF_SR.shape[0]
     n_data_VBF_BR = data_VBF_BR.shape[0]
     n_data_GGF_SR = data_GGF_SR.shape[0]
@@ -102,10 +109,10 @@ def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), see
     for h5_dir in h5_dirs:
 
         h5_dir = Path(h5_dir)
-        data_VBF_SR = prepare_feature_from_h5(h5_dir / 'VBF_in_SR.h5')
-        data_VBF_BR = prepare_feature_from_h5(h5_dir / 'VBF_in_BR.h5')
-        data_GGF_SR = prepare_feature_from_h5(h5_dir / 'GGF_in_SR.h5')
-        data_GGF_BR = prepare_feature_from_h5(h5_dir / 'GGF_in_BR.h5')
+        data_VBF_SR = prepare_feature_from_h5(h5_dir / 'VBF_in_SR.h5', remove_decay_products)
+        data_VBF_BR = prepare_feature_from_h5(h5_dir / 'VBF_in_BR.h5', remove_decay_products)
+        data_GGF_SR = prepare_feature_from_h5(h5_dir / 'GGF_in_SR.h5', remove_decay_products)
+        data_GGF_BR = prepare_feature_from_h5(h5_dir / 'GGF_in_BR.h5', remove_decay_products)
 
         new_data_tr = np.concatenate([
             data_VBF_SR[idx_VBF_SR_tr],
@@ -154,11 +161,11 @@ def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), see
     return data_tr, data_vl, data_te, label_tr, label_vl, label_te
 
 
-def create_pure_sample_from(h5_dir, n_events):
+def create_pure_sample_from(h5_dir, n_events, remove_decay_products=False):
 
     h5_dir = Path(h5_dir)
-    features_GGF = prepare_feature_from_h5(h5_dir / 'GGF.h5')
-    features_VBF = prepare_feature_from_h5(h5_dir / 'VBF.h5')
+    features_GGF = prepare_feature_from_h5(h5_dir / 'GGF.h5', remove_decay_products)
+    features_VBF = prepare_feature_from_h5(h5_dir / 'VBF.h5', remove_decay_products)
 
     n_train, n_val, n_test = n_events
     
@@ -229,6 +236,7 @@ def main():
     model_structure = config['model_structure']
     training_method = config['training_method']
     sample_type = config['sample_type']
+    remove_decay_products = config['remove_decay_products']
 
     # Training parameters
     with open('params.json', 'r') as f:
@@ -261,10 +269,10 @@ def main():
         r_train, r_val = 0.8, 0.2
         n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
         n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
-        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
+        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed, remove_decay_products=remove_decay_products)
     elif training_method == 'supervised':
         n_events = config['n_train'], config['n_val'], config['n_test']
-        X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events)
+        X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events, remove_decay_products=remove_decay_products)
     else:
         raise ValueError(f'Unknown training method: {training_method}')
 
