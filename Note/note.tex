@@ -1289,6 +1289,26 @@
         \end{figure}
     % subsection supervised_learning_without_photon_information (end)
 % section event_cnn (end)
+\section{Particle transformer}% (fold)
+\label{sec:particle_transformer}
+	We test an alternative network structure known as the Particle Transformer (ParT), as proposed in Ref.~\cite{Qu:2022mxj}.
+    \subsection{Supervised training with ParT}% (fold)
+    \label{sub:supervised_training_with_part}
+        We apply the ParT architecture to supervised classification tasks. The training, validation, and testing dataset sizes are identical to those listed in table~\ref{tab:supervised_sample_size}. Only events passing all selection criteria are used in training.
+
+		Table~\ref{tab:supervised_ParT_training_results_diphoton} summarizes the classification performance.
+        \begin{table}[htpb]
+            \centering
+            \caption{ParT classification results.}
+            \label{tab:supervised_ParT_training_results_diphoton}
+            \begin{tabular}{c|c}
+				 ACC               & AUC               \\ \hline
+				 $0.810 $ & $0.888$ \\
+			\end{tabular}
+        \end{table}
+		Compared to the previous results shown in table~\ref{tab:supervised_event_CNN_training_results_diphoton}, the ParT achieves slightly better performance.
+    % subsection supervised_training_with_part (end)
+% section particle_transformer (end)
 
 
 \bibliographystyle{ieeetr}
