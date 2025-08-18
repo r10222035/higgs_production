@@ -1296,18 +1296,84 @@
     \label{sub:supervised_training_with_part}
         We apply the ParT architecture to supervised classification tasks. The training, validation, and testing dataset sizes are identical to those listed in table~\ref{tab:supervised_sample_size}. Only events passing all selection criteria are used in training.
 
-		Table~\ref{tab:supervised_ParT_training_results_diphoton} summarizes the classification performance.
+		Table~\ref{tab:supervised_ParT_training_results} summarizes the training results. 
         \begin{table}[htpb]
             \centering
-            \caption{ParT classification results.}
-            \label{tab:supervised_ParT_training_results_diphoton}
-            \begin{tabular}{c|c}
-				 ACC               & AUC               \\ \hline
-				 $0.810 $ & $0.888$ \\
+            \caption{ParT classification results. Results are averaged over 10 training runs. The 10 training runs use the same dataset, only the initial weights are different.}
+            \label{tab:supervised_ParT_training_results}
+            \begin{tabular}{c|cc}
+                 Datasets  & ACC               & AUC               \\ \hline
+                 w/ photon & $0.785 \pm 0.013$ & $0.862 \pm 0.014$ \\
+                 w/o photon & $0.773 \pm 0.019$ & $0.850 \pm 0.022$ \\
 			\end{tabular}
         \end{table}
-		Compared to the previous results shown in table~\ref{tab:supervised_event_CNN_training_results_diphoton}, the ParT achieves slightly better performance.
+        % \begin{figure}[htpb]
+        %     \centering
+        %     \includegraphics[width=0.60\textwidth]{roc_curve_supervised.pdf}
+        %     \caption{ROC curves for ParT models trained with and without photon information.}
+        %     \label{fig:supervised_ParT_roc_curve}
+        % \end{figure}
+		Compared to the previous results shown in table~\ref{tab:supervised_event_CNN_training_results_diphoton_w_wo_photon} for event-CNN architecture, the ParT achieves slightly worse performance.
     % subsection supervised_training_with_part (end)
+    \subsection{CWoLa training with ParT}% (fold)
+    \label{sub:cwola_training_with_part}
+        We also study the effect of dataset size on the model's performance. The ParT is trained using the $2q0g$ datasets corresponding to different integrated luminosities. Table~\ref{tab:CWoLa_ParT_training_results_jet_tagging_various_L} summarizes the training results with and without photon information.
+        \begin{table}[htpb]
+            \centering
+            \caption{ParT training results with different dataset sizes corresponding to various luminosities. The ACC and AUC are evaluated over 10 training runs.}
+            \label{tab:CWoLa_ParT_training_results_jet_tagging_various_L}
+            \subfloat[With photon]{
+                \begin{tabular}{l|cc|cc}
+                                            & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                    Luminosity (fb$^{-1}$)  & ACC               & AUC               & ACC               & AUC               \\ \hline
+                    100                     & $0.603 \pm 0.015$ & $0.539 \pm 0.041$ & $0.544 \pm 0.043$ & $0.540 \pm 0.078$ \\
+                    300                     & $0.607 \pm 0.015$ & $0.549 \pm 0.066$ & $0.572 \pm 0.071$ & $0.584 \pm 0.112$ \\
+                    900                     & $0.620 \pm 0.013$ & $0.617 \pm 0.060$ & $0.657 \pm 0.062$ & $0.705 \pm 0.099$ \\
+                    1800                    & $0.609 \pm 0.018$ & $0.575 \pm 0.071$ & $0.607 \pm 0.086$ & $0.638 \pm 0.117$ \\
+                    3000                    & $0.622 \pm 0.019$ & $0.607 \pm 0.088$ & $0.648 \pm 0.097$ & $0.681 \pm 0.152$ \\
+                \end{tabular}
+            } \\
+            \subfloat[Without photon]{
+                \begin{tabular}{l|cc|cc}
+                                            & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                    Luminosity (fb$^{-1}$)  & ACC               & AUC               & ACC               & AUC               \\ \hline
+                    100                     & $0.612 \pm 0.019$ & $0.544 \pm 0.061$ & $0.545 \pm 0.044$ & $0.536 \pm 0.082$ \\
+                    300                     & $0.602 \pm 0.012$ & $0.535 \pm 0.062$ & $0.556 \pm 0.046$ & $0.564 \pm 0.072$ \\
+                    900                     & $0.610 \pm 0.020$ & $0.576 \pm 0.064$ & $0.595 \pm 0.080$ & $0.625 \pm 0.110$ \\
+                    1800                    & $0.620 \pm 0.022$ & $0.592 \pm 0.098$ & $0.637 \pm 0.105$ & $0.661 \pm 0.168$ \\
+                    3000                    & $0.637 \pm 0.008$ & $0.667 \pm 0.015$ & $0.714 \pm 0.022$ & $0.782 \pm 0.026$ \\
+                \end{tabular}
+            }
+        \end{table}
+
+        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L}. The training performance is very unstable on both cases. There are some training is totaly failed.
+        \begin{figure}[htpb]
+            \centering
+            \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L.pdf}
+            \caption{AUC comparison for ParT models trained with and without photon information across different luminosities. The average and standard deviation are evaluated over 10 training runs.}
+            \label{fig:ParT_AUC_various_L}
+        \end{figure}
+    % subsection cwola_training_with_part (end)
+    \subsection{\texorpdfstring{$\phi$}{phi}-shifting augmentation on ParT}% (fold)
+    \label{sub:phi_shifting_augmentation_on_part}
+        We test the $\phi$-shifting augmentation of the photon information removed case. Here, we consider the luminosity of $\mathcal{L} = \text{100 fb}^{-1}$.
+        
+        Table~\ref{tab:CWoLa_ParT_training_results_100_jet_tagging_phi_aug_5_10_15} summarizes the training results using the $2q0g$ dataset with $\phi$-shifting augmentation.
+        \begin{table}[htpb]
+            \centering
+            \caption{ParT training results for the photon-removed dataset with different $\phi$-shifting augmentation sizes. ACC and AUC are averaged over 10 training runs.}
+            \label{tab:CWoLa_ParT_training_results_100_jet_tagging_phi_aug_5_10_15}
+            \begin{tabular}{l|cc|cc}
+                         & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Datasets & ACC               & AUC               & ACC               & AUC               \\ \hline
+                Original & $0.612 \pm 0.019$ & $0.544 \pm 0.061$ & $0.545 \pm 0.044$ & $0.536 \pm 0.082$ \\
+                +5       & $0.595 \pm 0.005$ & $0.495 \pm 0.031$ & $0.515 \pm 0.014$ & $0.492 \pm 0.042$ \\
+                +10      & $0.606 \pm 0.017$ & $0.552 \pm 0.065$ & $0.579 \pm 0.063$ & $0.599 \pm 0.094$ \\
+                +15      & $0.630 \pm 0.028$ & $0.620 \pm 0.065$ & $0.646 \pm 0.066$ & $0.693 \pm 0.093$
+            \end{tabular}
+        \end{table}
+        The results show that $\phi$-shifting augmentation improves model performance. The $\phi$-shifting augmentation helps improve generalization, but can not mitigate the statistical flunctuation.
+    % subsection phi_shifting_augmentation_on_part (end)
 % section particle_transformer (end)
 
 
