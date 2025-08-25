@@ -1374,6 +1374,19 @@
         \end{table}
         The results show that $\phi$-shifting augmentation improves model performance. The $\phi$-shifting augmentation helps improve generalization, but can not mitigate the statistical flunctuation.
     % subsection phi_shifting_augmentation_on_part (end)
+    \subsection{Implement \texorpdfstring{$p_{\mathrm{T}}$}{pT} normalization with ParT}% (fold)
+    \label{sub:implement_pt_normalization_with_part}
+        We apply $p_{\text{T}}$ normalization to investigate whether it can mitigate training fluctuations. The ParT model is trained on the $2q0g$ datasets corresponding to different integrated luminosities.
+
+        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm}. The training performance is still unstable on both cases. There are some training is totaly failed.
+        \begin{figure}[htpb]
+            \centering
+            \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm.pdf}
+            \caption{AUC comparison for ParT models trained with $p_{\text{T}}$ normalization across different luminosities. The average and standard deviation are evaluated over 10 independent training runs.}
+            \label{fig:ParT_AUC_various_L_pTnorm}
+        \end{figure}
+    % subsection implement_pt_normalization_with_part (end)
+
 % section particle_transformer (end)
 
 
