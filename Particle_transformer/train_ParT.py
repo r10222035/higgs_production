@@ -223,6 +223,17 @@ def get_highest_accuracy(y_true, y_pred):
     return accuracies.max()
 
 
+def pt_normalization(X):
+    slices = [slice(0, 250), slice(250, 400), slice(400, 402)]
+    for i, s in enumerate(slices):
+        mean = np.nanmean(X[:, s, 0], axis=(1), keepdims=True)
+        std = np.nanstd(X[:, s, 0], axis=(1), keepdims=True)
+        epsilon = 1e-8
+        std = np.where(std < epsilon, epsilon, std)
+
+        X[:, s, 0] = (X[:, s, 0] - mean) / std
+
+
 def main():
     config_path = sys.argv[1]
 
@@ -275,6 +286,10 @@ def main():
         X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events, remove_decay_products=remove_decay_products)
     else:
         raise ValueError(f'Unknown training method: {training_method}')
+
+    pt_normalization(X_train)
+    pt_normalization(X_val)
+    pt_normalization(X_test)
 
     train_size = get_sample_size(y_train)
     val_size = get_sample_size(y_val)
