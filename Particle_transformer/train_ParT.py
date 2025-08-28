@@ -46,7 +46,7 @@ def prepare_feature_from_h5(h5_file, remove_decay_products=False):
         event_pt[event_mask == False] = float('nan')
         event_eta[event_mask == False] = float('nan')
         event_phi[event_mask == False] = float('nan')
-        
+
         event_particle_type_0 = np.array([1] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
         event_particle_type_0 = np.tile(event_particle_type_0, (event_pt.shape[0], 1))
         event_particle_type_1 = np.array([0] * MAX_CONSTI['Tower'] + [1] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
@@ -55,7 +55,7 @@ def prepare_feature_from_h5(h5_file, remove_decay_products=False):
         event_particle_type_2 = np.tile(event_particle_type_2, (event_pt.shape[0], 1))
 
         features = np.stack([event_pt, event_eta, event_phi, event_particle_type_0, event_particle_type_1, event_particle_type_2], axis=-1)
-    
+
     return features
 
 
@@ -168,7 +168,7 @@ def create_pure_sample_from(h5_dir, n_events, remove_decay_products=False):
     features_VBF = prepare_feature_from_h5(h5_dir / 'VBF.h5', remove_decay_products)
 
     n_train, n_val, n_test = n_events
-    
+
     # Split the dataset into training and validation sets
     X_train = np.concatenate([features_GGF[:n_train], features_VBF[:n_train]], axis=0)
     y_train = np.array([0] * n_train + [1] * n_train)
@@ -188,7 +188,7 @@ def compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, L, cut_type, BR=
     GGF_selection = np.load(GGF_cutflow_file, allow_pickle=True).item()
     VBF_selection = np.load(VBF_cutflow_file, allow_pickle=True).item()
 
-    if  cut_type == 'quark_jet_2':
+    if cut_type == 'quark_jet_2':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
         n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
@@ -234,6 +234,31 @@ def pt_normalization(X):
         X[:, s, 0] = (X[:, s, 0] - mean) / std
 
 
+class WarmUp(tf.keras.optimizers.schedules.LearningRateSchedule):
+    def __init__(self, initial_learning_rate, decay_schedule_fn, warmup_steps):
+        super().__init__()
+        self.initial_learning_rate = initial_learning_rate
+        self.decay_schedule_fn = decay_schedule_fn
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        # Linear warmup
+        warmup_lr = self.initial_learning_rate * (tf.cast(step, tf.float32) / tf.cast(self.warmup_steps, tf.float32))
+        # After warmup → decay schedule
+        return tf.cond(
+            step < self.warmup_steps,
+            lambda: warmup_lr,
+            lambda: self.decay_schedule_fn(step - self.warmup_steps)
+        )
+
+    def get_config(self):
+        return {
+            "initial_learning_rate": self.initial_learning_rate,
+            "decay_schedule_fn": self.decay_schedule_fn,
+            "warmup_steps": self.warmup_steps,
+        }
+
+
 def main():
     config_path = sys.argv[1]
 
@@ -265,7 +290,7 @@ def main():
     if training_method == 'CWoLa':
         luminosity = config['luminosity']
         cut_type = config['cut_type']
-        
+
         GGF_cutflow_file = config['GGF_cutflow_file']
         VBF_cutflow_file = config['VBF_cutflow_file']
         decay_channel = config['decay_channel']
@@ -309,7 +334,18 @@ def main():
         model = ParT_Light(num_channels=3)
     else:
         raise ValueError(f'Unknown model name: {model_name}')
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate),
+
+    # Learning rate schedule
+    steps_per_epoch = len(y_train) // BATCH_SIZE
+    warmup_epochs, decay_epochs = 5, 10
+    warmup_steps = warmup_epochs * steps_per_epoch
+    decay_steps = decay_epochs * steps_per_epoch
+    decay_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=0.9, staircase=False
+    )
+    lr_schedule = WarmUp(learning_rate, decay_schedule, warmup_steps=warmup_steps)
+
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
                   metrics=['accuracy'])
 
@@ -323,11 +359,13 @@ def main():
     if not os.path.isdir(best_model_name):
         shutil.copytree(save_model_name, best_model_name, dirs_exist_ok=True)
         print('Save to best model')
-    best_model = tf.keras.models.load_model(best_model_name)
+    with tf.keras.utils.custom_object_scope({'WarmUp': WarmUp}):
+        best_model = tf.keras.models.load_model(best_model_name)
     best_results = best_model.evaluate(valid_dataset, batch_size=BATCH_SIZE)
     print(f'Testing Loss = {best_results[0]:.3}, Testing Accuracy = {best_results[1]:.3}')
 
-    loaded_model = tf.keras.models.load_model(save_model_name)
+    with tf.keras.utils.custom_object_scope({'WarmUp': WarmUp}):
+        loaded_model = tf.keras.models.load_model(save_model_name)
     results = loaded_model.evaluate(valid_dataset, batch_size=BATCH_SIZE)
     print(f'Testing Loss = {results[0]:.3}, Testing Accuracy = {results[1]:.3}')
 
@@ -372,7 +410,7 @@ def main():
                 'Training epochs': [len(history.history['loss']) + 1],
                 'time': [now],
                 }
-    
+
     df = pd.DataFrame(data_dict)
     if os.path.isfile(file_name):
         training_results_df = pd.read_csv(file_name)
