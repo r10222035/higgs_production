@@ -1346,7 +1346,7 @@
             }
         \end{table}
 
-        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L}. The training performance is very unstable on both cases. There are some training is totaly failed.
+        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L}. The training performance is very unstable in both cases. Some trainings have totally failed.
         \begin{figure}[htpb]
             \centering
             \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L.pdf}
@@ -1372,13 +1372,13 @@
                 +15      & $0.630 \pm 0.028$ & $0.620 \pm 0.065$ & $0.646 \pm 0.066$ & $0.693 \pm 0.093$
             \end{tabular}
         \end{table}
-        The results show that $\phi$-shifting augmentation improves model performance. The $\phi$-shifting augmentation helps improve generalization, but can not mitigate the statistical flunctuation.
+        The results show that $\phi$-shifting augmentation improves model performance. The $\phi$-shifting augmentation helps improve generalization, but can not mitigate the statistical fluctuation.
     % subsection phi_shifting_augmentation_on_part (end)
-    \subsection{Implement \texorpdfstring{$p_{\mathrm{T}}$}{pT} normalization with ParT}% (fold)
+    \subsection{Implementing \texorpdfstring{$p_{\mathrm{T}}$}{pT} normalization with ParT}% (fold)
     \label{sub:implement_pt_normalization_with_part}
         We apply $p_{\text{T}}$ normalization to investigate whether it can mitigate training fluctuations. The ParT model is trained on the $2q0g$ datasets corresponding to different integrated luminosities.
 
-        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm}. The training performance is still unstable on both cases. There are some training is totaly failed.
+        The comparison between the two setups is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm}. In both cases, the training performance remains unstable, and in some runs, the training completely fails.
         \begin{figure}[htpb]
             \centering
             \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm.pdf}
@@ -1386,9 +1386,82 @@
             \label{fig:ParT_AUC_various_L_pTnorm}
         \end{figure}
     % subsection implement_pt_normalization_with_part (end)
+    \subsection{Implementing a learning rate schedule}% (fold)
+    \label{sub:implement_learning_rate_schedule}
+
+    We introduce a learning rate schedule with a warm-up to prevent the training from diverging in the early stage. The schedule combines a short warm-up phase with a subsequent exponential decay strategy. The ParT model is trained on the $2q0g$ datasets corresponding to different integrated luminosities.
+
+    The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm_lr_schedule}. The training performance still exhibits instabilities, but the completely failed cases are fewer than in previous testing.
+    \begin{figure}[htpb]
+        \centering
+        % \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm.pdf}
+        \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm_lr_schedule.pdf}
+        \caption{AUC comparison for ParT models trained with learning rate schedule across different luminosities. The average and standard deviation are evaluated over 10 independent training runs.}
+        \label{fig:ParT_AUC_various_L_pTnorm_lr_schedule}
+    \end{figure}
+    % subsection implement_learning_rate_schedule (end)
 
 % section particle_transformer (end)
+\section{Comparison of training sample}% (fold)
+\label{sec:comparison_of_training_sample}
+    There are some differences between Yian's and my training sample preparation workflows:
+    \begin{enumerate}
+        \item Yian did not apply flipping.
+        \item For the $\phi$-translation, I computed a common $\phi$-center for all channels, while Yian computed the $\phi$-center for each channel separately.
+    \end{enumerate}
+    It is not immediately clear how these differences affect the training results. To investigate this, I tested supervised and CWoLa training on event-CNN using Yian's samples.
 
+    For the supervised training, we used the same setup as in section~\ref{sub:supervised_training_with_event_cnn}. Table~\ref{tab:supervised_event_CNN_training_results_diphoton_w_wo_photon_yian_sample} summarizes the classification performance. 
+    \begin{table}[htpb]
+        \centering
+        \caption{Event-CNN classification results using Yian's and FY's samples. Results are averaged over 10 training runs.}
+        \label{tab:supervised_event_CNN_training_results_diphoton_w_wo_photon_yian_sample}
+        \begin{tabular}{c|cc|cc}
+            Datasets   & \multicolumn{2}{c|}{Yian}             & \multicolumn{2}{c}{FY}                \\ \hline
+                       & ACC               & AUC               & ACC               & AUC               \\ \hline
+            w/ photon  & $0.782 \pm 0.001$ & $0.859 \pm 0.001$ & $0.792 \pm 0.001$ & $0.871 \pm 0.001$ \\
+            w/o photon & $0.781 \pm 0.001$ & $0.858 \pm 0.001$ & $0.784 \pm 0.001$ & $0.862 \pm 0.001$
+        \end{tabular}
+    \end{table}
+    Yian's results are worse than FY's by about 1\% for with photon case.
+
+    For CWoLa training, we trained models with different luminosities. Table~\ref{tab:CWoLa_eventCNN_training_results_jet_tagging_various_L_yian} summarizes the results with and without photon information.  
+    \begin{table}[htpb]
+        \centering
+        \caption{Event-CNN training results using Yian's samples with different dataset sizes corresponding to various luminosities. Results are averaged over 10 training runs.}
+        \label{tab:CWoLa_eventCNN_training_results_jet_tagging_various_L_yian}
+        \subfloat[With photon]{
+            \begin{tabular}{l|cc|cc}
+                                        & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Luminosity (fb$^{-1}$)  & ACC               & AUC               & ACC               & AUC               \\ \hline
+                100                     & $0.604 \pm 0.017$ & $0.517 \pm 0.054$ & $0.560 \pm 0.046$ & $0.572 \pm 0.074$ \\
+                300                     & $0.603 \pm 0.009$ & $0.585 \pm 0.021$ & $0.620 \pm 0.006$ & $0.662 \pm 0.009$ \\
+                900                     & $0.609 \pm 0.006$ & $0.606 \pm 0.011$ & $0.640 \pm 0.005$ & $0.694 \pm 0.007$ \\
+                1800                    & $0.609 \pm 0.006$ & $0.616 \pm 0.013$ & $0.652 \pm 0.011$ & $0.708 \pm 0.015$ \\
+                3000                    & $0.615 \pm 0.005$ & $0.630 \pm 0.012$ & $0.665 \pm 0.015$ & $0.724 \pm 0.018$ \\
+            \end{tabular}
+        } \\
+        \subfloat[Without photon]{
+            \begin{tabular}{l|cc|cc}
+                                        & \multicolumn{2}{c|}{$M_1 / M_2$}      & \multicolumn{2}{c}{$S / B$}           \\ \hline
+                Luminosity (fb$^{-1}$)  & ACC               & AUC               & ACC               & AUC               \\ \hline
+                100                     & $0.608 \pm 0.023$ & $0.541 \pm 0.069$ & $0.553 \pm 0.039$ & $0.563 \pm 0.061$ \\
+                300                     & $0.607 \pm 0.009$ & $0.590 \pm 0.026$ & $0.610 \pm 0.024$ & $0.651 \pm 0.034$ \\
+                900                     & $0.611 \pm 0.005$ & $0.612 \pm 0.012$ & $0.637 \pm 0.009$ & $0.691 \pm 0.011$ \\
+                1800                    & $0.611 \pm 0.007$ & $0.619 \pm 0.013$ & $0.656 \pm 0.017$ & $0.712 \pm 0.021$ \\
+                3000                    & $0.620 \pm 0.009$ & $0.640 \pm 0.018$ & $0.669 \pm 0.016$ & $0.728 \pm 0.020$ \\
+            \end{tabular}
+        }
+    \end{table}
+
+    The comparison among different cases is shown in figure~\ref{fig:eventCNN_AUC_various_L_yian_FY}. Overall, Yian's results are worse than FY's. These results suggest that differences in the sample preparation workflow have a direct impact on the training performance.  
+    \begin{figure}[htpb]
+        \centering
+        \includegraphics[width=0.60\textwidth]{event_CNN_AUC-true_L_yian_FY.pdf}
+        \caption{AUC comparison for event-CNN models trained with and without photon information across different luminosities. Results are averaged over 10 training runs, with error bars indicating standard deviations.}
+        \label{fig:eventCNN_AUC_various_L_yian_FY}
+    \end{figure}
+% section comparison_of_training_sample (end)
 
 \bibliographystyle{ieeetr}
 \bibliography{reference}
