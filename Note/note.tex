@@ -1389,16 +1389,16 @@
     \subsection{Implementing a learning rate schedule}% (fold)
     \label{sub:implement_learning_rate_schedule}
 
-    We introduce a learning rate schedule with a warm-up to prevent the training from diverging in the early stage. The schedule combines a short warm-up phase with a subsequent exponential decay strategy. The ParT model is trained on the $2q0g$ datasets corresponding to different integrated luminosities.
+        We introduce a learning rate schedule with a warm-up to prevent the training from diverging in the early stage. The schedule combines a short warm-up phase with a subsequent exponential decay strategy. The ParT model is trained on the $2q0g$ datasets corresponding to different integrated luminosities.
 
-    The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm_lr_schedule}. The training performance still exhibits instabilities, but the completely failed cases are fewer than in previous testing.
-    \begin{figure}[htpb]
-        \centering
-        % \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm.pdf}
-        \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm_lr_schedule.pdf}
-        \caption{AUC comparison for ParT models trained with learning rate schedule across different luminosities. The average and standard deviation are evaluated over 10 independent training runs.}
-        \label{fig:ParT_AUC_various_L_pTnorm_lr_schedule}
-    \end{figure}
+        The comparison between the two scenarios is shown in figure~\ref{fig:ParT_AUC_various_L_pTnorm_lr_schedule}. The training performance still exhibits instabilities, but the completely failed cases are fewer than in previous testing.
+        \begin{figure}[htpb]
+            \centering
+            % \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm.pdf}
+            \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm_lr_schedule.pdf}
+            \caption{AUC comparison for ParT models trained with learning rate schedule across different luminosities. The average and standard deviation are evaluated over 10 independent training runs.}
+            \label{fig:ParT_AUC_various_L_pTnorm_lr_schedule}
+        \end{figure}
     % subsection implement_learning_rate_schedule (end)
 
 % section particle_transformer (end)
@@ -1423,7 +1423,7 @@
             w/o photon & $0.781 \pm 0.001$ & $0.858 \pm 0.001$ & $0.784 \pm 0.001$ & $0.862 \pm 0.001$
         \end{tabular}
     \end{table}
-    Yian's results are worse than FY's by about 1\% for with photon case.
+    Yian's results are worse than FY's by about 1\% for the photon case.
 
     For CWoLa training, we trained models with different luminosities. Table~\ref{tab:CWoLa_eventCNN_training_results_jet_tagging_various_L_yian} summarizes the results with and without photon information.  
     \begin{table}[htpb]
@@ -1461,7 +1461,45 @@
         \caption{AUC comparison for event-CNN models trained with and without photon information across different luminosities. Results are averaged over 10 training runs, with error bars indicating standard deviations.}
         \label{fig:eventCNN_AUC_various_L_yian_FY}
     \end{figure}
+
+    The following step is included for Yian's pre-processing flow:
+    \begin{itemize}
+        \item another moving in the $\phi$-direction. This moves to ensure the high intensity $p_{\text{T}}$ region does not cross the $\pm\pi$ boundary.
+    \end{itemize}
+
+    The comparison among different cases is shown in figure~\ref{fig:eventCNN_AUC_various_L_yian0905_FY}. Overall, Yian's results are consistent than FY's. The main differences are the without photon case in low luminosities.  
+    \begin{figure}[htpb]
+        \centering
+        \includegraphics[width=0.60\textwidth]{event_CNN_AUC-true_L_yian_FY.pdf}
+        % \includegraphics[width=0.60\textwidth]{event_CNN_AUC-true_L_yian0905_FY.pdf}
+        \caption{AUC comparison for event-CNN models trained with and without photon information across different luminosities. Results are averaged over 10 training runs, with error bars indicating standard deviations.}
+        \label{fig:eventCNN_AUC_various_L_yian0905_FY}
+    \end{figure}
 % section comparison_of_training_sample (end)
+
+\section{Modify the training setup for Transformer}% (fold)
+\label{sec:modify_the_training_setup_for_transformer}
+    The training results of the Transformer model are highly unstable in my setup, a behavior not observed in Yian’s training. To investigate the possible cause, we compared the pre-processed datasets. The inputs for the with and without photon cases yield almost identical values after preprocessing, suggesting that the instability is not due to discrepancies in the input samples.
+
+    In the comparison, we unexpectedly found that roughly 0.1\% VBF events contain no constituents in the TRACK channel. Since the Particle Transformer can handle NaN values, we do not expect this issue to be the primary cause of the training failures.
+
+    We further tested a range of hyperparameter configurations, varying the batch size from 128 to 512 and the learning rate from $10^{-5}$ to $4\times10^{-4}$. However, all of these setups still resulted in unstable training, with the runs failing.
+
+    Finally, we found that this issue stems from the ``logit output.'' The logit refers to the raw classifier output before applying a normalization function such as sigmoid or softmax. In my original setup, the loss function did not correctly account for this, leading to inconsistent optimization behavior. The recommended usage is to specify \verb|from_logits=True| in the \texttt{BinaryCrossentropy} function, as shown below:
+    \begin{verbatim}
+        model.compile(
+            loss=keras.losses.BinaryCrossentropy(from_logits=True),
+            ...
+        )
+    \end{verbatim}
+    After fixing this issue, the training process became much more stable. Figure~\ref{fig:ParT_AUC_various_L_pTnorm_logit} presents the updated results. In both the with- and without-photon cases, the models now exhibit consistent training behavior, and no completely failed runs are observed.
+    \begin{figure}[htpb]
+        \centering
+        \includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm_logit.pdf}
+        \caption{AUC comparison for ParT models trained with $p_{\text{T}}$ normalization across different luminosities. Results are averaged over 10 independent training runs, with error bars indicating standard deviations.}
+        \label{fig:ParT_AUC_various_L_pTnorm_logit}
+    \end{figure}
+% section modify_the_training_setup_for_transformer (end)
 
 \bibliographystyle{ieeetr}
 \bibliography{reference}
