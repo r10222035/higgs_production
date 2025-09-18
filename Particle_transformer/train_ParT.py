@@ -228,6 +228,8 @@ def pt_normalization(X):
     for i, s in enumerate(slices):
         mean = np.nanmean(X[:, s, 0], axis=(1), keepdims=True)
         std = np.nanstd(X[:, s, 0], axis=(1), keepdims=True)
+        mean[np.isnan(mean)] = 0
+        std[np.isnan(std)] = 1
         epsilon = 1e-8
         std = np.where(std < epsilon, epsilon, std)
 
@@ -335,18 +337,18 @@ def main():
     else:
         raise ValueError(f'Unknown model name: {model_name}')
 
-    # Learning rate schedule
-    steps_per_epoch = len(y_train) // BATCH_SIZE
-    warmup_epochs, decay_epochs = 5, 10
-    warmup_steps = warmup_epochs * steps_per_epoch
-    decay_steps = decay_epochs * steps_per_epoch
-    decay_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=0.9, staircase=False
-    )
-    lr_schedule = WarmUp(learning_rate, decay_schedule, warmup_steps=warmup_steps)
+    # # Learning rate schedule
+    # steps_per_epoch = len(y_train) // BATCH_SIZE
+    # warmup_epochs, decay_epochs = 5, 10
+    # warmup_steps = warmup_epochs * steps_per_epoch
+    # decay_steps = decay_epochs * steps_per_epoch
+    # decay_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    #     initial_learning_rate=learning_rate, decay_steps=decay_steps, decay_rate=0.9, staircase=False
+    # )
+    # lr_schedule = WarmUp(learning_rate, decay_schedule, warmup_steps=warmup_steps)
 
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
-                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=min_delta, verbose=1, patience=patience)

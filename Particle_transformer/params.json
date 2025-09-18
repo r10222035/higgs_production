@@ -1,6 +1,6 @@
 {
     "BATCH_SIZE": 512,
-    "learning_rate": 0.0004,
+    "learning_rate": 4e-4,
 
     "EPOCHS": 500,
     "patience": 20,
