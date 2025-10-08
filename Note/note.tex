@@ -1501,6 +1501,90 @@
     \end{figure}
 % section modify_the_training_setup_for_transformer (end)
 
+\section{Summary of all tests}% (fold)
+\label{sec:summary_of_all_tests}
+
+	\subsection{Supervised training}% (fold)
+	\label{sub:supervised_training}
+		Table~\ref{tab:supervised_CNN_ParT_diphoton_w_wo_photon} summarizes the supervised training results for both Event-CNN and ParT models, with and without photon information. Each result is averaged over ten independent training runs using the same dataset but different random initializations. 
+        \begin{table}[htpb]
+            \centering
+            \caption{Supervised classification performance of Event-CNN and ParT models trained on the di-photon dataset. Results are averaged over 10 independent runs; only the random initialization differs between runs.}
+            \label{tab:supervised_CNN_ParT_diphoton_w_wo_photon}
+            \begin{tabular}{c|cc|cc}
+						  & \multicolumn{2}{c|}{w/ photon}         & \multicolumn{2}{c}{w/o photon}        \\ 
+				Model     & ACC               & AUC               & ACC               & AUC               \\ \hline
+				Event-CNN & $0.792 \pm 0.001$ & $0.871 \pm 0.001$ & $0.792 \pm 0.001$ & $0.871 \pm 0.001$ \\
+				ParT      & $0.784 \pm 0.001$ & $0.862 \pm 0.001$ & $0.784 \pm 0.001$ & $0.862 \pm 0.001$
+			\end{tabular}        
+		\end{table}	
+	% subsection supervised_training (end)
+	
+	\subsection{CWoLa training}% (fold)
+	\label{sub:cwola_training}
+		Figure~\ref{fig:CWoLa_CNN_ParT_diphoton_w_wo_photon_L} presents the classification performance obtained using the CWoLa training strategy for both models across different integrated luminosities.
+		\begin{figure}[htpb]
+			\centering
+			\includegraphics[width=0.60\textwidth]{NN_AUC-true_L.pdf}
+			\caption{AUC comparison for Event-CNN and ParT models trained with the CWoLa approach across different luminosities. Results are averaged over 10 independent training runs, with error bars indicating standard deviations.}
+			\label{fig:CWoLa_CNN_ParT_diphoton_w_wo_photon_L}
+		\end{figure}
+	% subsection cwola_training (end)
+        
+	\subsection{CWoLa training with data augmentation}% (fold)
+	\label{sub:cwola_training_with_data_augmentation}
+		The CWoLa training is further performed with data augmentation to enhance the training stability and sensitivity. Figure~\ref{fig:CWoLa_CNN_ParT_diphoton_w_wo_photon_L_aug} shows the AUC performance across different configurations. Data augmentation improves the overall consistency and slightly enhances the average AUC, particularly in low-luminosity cases.
+        \begin{figure}[htpb]
+            \centering
+            \subfloat[event-CNN, w/ photon]{
+                \includegraphics[width=0.45\textwidth]{Event-CNN_w_photon_AUC-true_L-phi_aug.pdf}
+            }
+            \subfloat[event-CNN, w/o photon]{
+                \includegraphics[width=0.45\textwidth]{Event-CNN_wo_photon_AUC-true_L-phi_aug.pdf}
+            } \\
+            \subfloat[ParT, w/ photon]{
+                \includegraphics[width=0.45\textwidth]{ParT_w_photon_AUC-true_L-phi_aug.pdf}
+            }
+            \subfloat[ParT, w/o photon]{
+                \includegraphics[width=0.45\textwidth]{ParT_wo_photon_AUC-true_L-phi_aug.pdf}
+            }
+            \caption{AUC comparison for CWoLa training with data augmentation under various conditions. Results are averaged over 10 independent training runs.}
+            \label{fig:CWoLa_CNN_ParT_diphoton_w_wo_photon_L_aug}
+        \end{figure}
+	% subsection cwola_training_with_data_augmentation (end)
+
+	% \subsection{CWoLa training ZZ4l}% (fold)
+	% \label{sub:cwola_training_zz4l}
+	% 	CWoLa ZZ4l: (event-CNN, ParT) x (w/ decay product, w/o decay product) x (3000, 15000, 30000)
+
+	% 	Figure~\ref{fig:CWoLa_CNN_ParT_ZZ4l_w_wo_photon_L} presents the CWoLa results.
+	% 	\begin{figure}[htpb]
+	% 		\centering
+	% 		\includegraphics[width=0.60\textwidth]{ParT_AUC-true_L-pTnorm_logit.pdf}
+	% 		\caption{AUC comparison for event-CNN and ParT models across different luminosities. Results are averaged over 10 independent training runs, with error bars indicating standard deviations.}
+	% 		\label{fig:CWoLa_CNN_ParT_ZZ4l_w_wo_photon_L}
+	% 	\end{figure}
+	% % subsection cwola_training_zz4l (end)
+	\subsection{Application to the $H \to ZZ^* \to 4\ell$ channel}% (fold)
+	\label{sub:apply_di_photon_models_on_zz4l_events}
+		Finally, the di-photon–trained models are applied to the $H \to ZZ^* \to 4\ell$ events to test their transferability across decay modes. Their classification performance is compared with CWoLa models directly trained on the $ZZ4\ell$ dataset at very high luminosity.
+
+        Figure~\ref{fig:CWoLa_CNN_ParT_diphoton_apply_ZZ4l} shows the corresponding AUC comparisons. The transferred models retain discriminating power, suggesting that both Event-CNN and ParT can capture production-related features independent of the specific Higgs decay channel.
+        \begin{figure}[htpb]
+            \centering
+            \subfloat[event-CNN, w/o photon]{
+                \includegraphics[width=0.45\textwidth]{EventCNN_aa_apply_to_ZZ4l_AUC-true_L.pdf}
+            } 
+            \subfloat[ParT, w/o photon]{
+                \includegraphics[width=0.45\textwidth]{ParT_aa_apply_to_ZZ4l_AUC-true_L.pdf}
+            } 
+            \caption{AUC comparison for di-photon–trained models applied to the $H \to ZZ^* \to 4\ell$ channel. Results are compared with CWoLa models trained directly on the $ZZ4\ell$ dataset.}
+            \label{fig:CWoLa_CNN_ParT_diphoton_apply_ZZ4l}
+        \end{figure}
+	% subsection apply_di_photon_models_on_zz4l_events (end)
+
+% section summary_of_all_tests (end)
+
 \bibliographystyle{ieeetr}
 \bibliography{reference}
 
