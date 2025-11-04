@@ -1,0 +1,27 @@
+define v = w+ w- z
+generate p p > h j j $$v
+output VBF_Higgs_Za
+launch VBF_Higgs_Za
+
+shower=Pythia8
+detector=Delphes
+analysis=OFF
+madspin=OFF
+done
+
+Cards/delphes_card.dat
+
+set run_card nevents 10000
+set run_card ebeam1 7000.0
+set run_card ebeam2 7000.0
+
+set run_card use_syst False
+
+set pythia8_card 25:onMode = off
+set pythia8_card 25:onIfMatch = 22 23
+
+set pythia8_card 23:onMode = off
+set pythia8_card 23:onIfMatch = 11 -11
+set pythia8_card 23:onIfMatch = 13 -13
+
+done

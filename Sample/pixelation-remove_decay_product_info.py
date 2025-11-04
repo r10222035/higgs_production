@@ -42,10 +42,20 @@ def from_h5_to_npy(h5_path, output_path, res=75, case=0):
         print('Computing the histogram')
         hpT0 = pixelization(f['TOWER/pt'], f['TOWER/eta'], f['TOWER/phi'], res)
         hpT1 = pixelization(f['TRACK/pt'], f['TRACK/eta'], f['TRACK/phi'], res)
-        try:
-            hpT2 = pixelization(f['PHOTON/pt'], f['PHOTON/eta'], f['PHOTON/phi'], res)
-        except:
-            hpT2 = pixelization(f['LEPTON/pt'], f['LEPTON/eta'], f['LEPTON/phi'], res)
+        
+        if 'PHOTON' in f.keys() and 'LEPTON' in f.keys():
+            pt_decay_product = np.concatenate([f['PHOTON/pt'][:], f['LEPTON/pt'][:]], axis=1)
+            eta_decay_product = np.concatenate([f['PHOTON/eta'][:], f['LEPTON/eta'][:]], axis=1)
+            phi_decay_product = np.concatenate([f['PHOTON/phi'][:], f['LEPTON/phi'][:]], axis=1)
+        elif 'PHOTON' in f.keys():
+            pt_decay_product = f['PHOTON/pt'][:]
+            eta_decay_product = f['PHOTON/eta'][:]
+            phi_decay_product = f['PHOTON/phi'][:]
+        elif 'LEPTON' in f.keys():
+            pt_decay_product = f['LEPTON/pt'][:]
+            eta_decay_product = f['LEPTON/eta'][:]
+            phi_decay_product = f['LEPTON/phi'][:]
+        hpT2 = pixelization(pt_decay_product, eta_decay_product, phi_decay_product, res)
 
         # 將結果堆疊起來
         # data shpae: (nevent, res, res, 2)
