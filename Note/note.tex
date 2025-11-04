@@ -1583,7 +1583,104 @@
         \end{figure}
 	% subsection apply_di_photon_models_on_zz4l_events (end)
 
+
 % section summary_of_all_tests (end)
+\section{\texorpdfstring{$H \to Z\gamma, Z \to 2\ell$}{H to Za, Z to 2l} channel}% (fold)
+\label{sec:h_to_za_z_to_2l_channel}
+   \subsection{Sample preparation}% (fold)
+    \label{sub:sample_preparation}
+        
+        We consider SM Higgs decay into $Z\gamma$ via GGF and VBF channels at a center-of-mass energy of $\sqrt{s} = 14$ TeV. We focus on the leptonic decay mode for the $Z$ boson: $Z \to 2\ell, \ell = e, \mu$. The Higgs boson events are generated using \verb|MadGraph 3.3.1|~\cite{Alwall:2014hca} for both GGF and VBF production. The parton showering and hadronization are simulated using \verb|Pythia 8.306|~\cite{Sjostrand:2014zea}. The detector simulation is conducted by \verb|Delphes 3.4.2|~\cite{deFavereau:2013fsa}. Jet reconstruction is performed using \verb|FastJet 3.3.2|~\cite{Cacciari:2011ma} with the anti-$k_t$ algorithm~\cite{Cacciari:2008gp} and a jet radius of $R = 0.4$. These jets are required to have transverse momentum $p_{\text{T}} > 25$ GeV.
+
+        The following \verb|MadGraph| scripts generate Monte Carlo samples for each production channel.
+        \paragraph{GGF Higgs Sample Generation}
+        \begin{lstlisting}
+            generate p p > h QCD<=99 [QCD]
+            output GGF_Higgs_Za
+            launch GGF_Higgs_Za
+
+            shower=Pythia8
+            detector=Delphes
+            analysis=OFF
+            madspin=OFF
+            done
+
+            Cards/delphes_card.dat
+
+            set run_card nevents 10000
+            set run_card ebeam1 7000.0
+            set run_card ebeam2 7000.0
+
+            set run_card use_syst False
+
+            set pythia8_card 25:onMode = off
+            set pythia8_card 25:onIfMatch = 22 23
+
+            set pythia8_card 23:onMode = off
+            set pythia8_card 23:onIfMatch = 11 -11
+            set pythia8_card 23:onIfMatch = 13 -13
+
+            done
+        \end{lstlisting}
+        \paragraph{VBF Higgs Sample Generation}
+        \begin{lstlisting}
+            define v = w+ w- z
+            generate p p > h j j $$v
+            output VBF_Higgs_Za
+            launch VBF_Higgs_Za
+
+            shower=Pythia8
+            detector=Delphes
+            analysis=OFF
+            madspin=OFF
+            done
+
+            Cards/delphes_card.dat
+
+            set run_card nevents 10000
+            set run_card ebeam1 7000.0
+            set run_card ebeam2 7000.0
+
+            set run_card use_syst False
+
+            set pythia8_card 25:onMode = off
+            set pythia8_card 25:onIfMatch = 22 23
+
+            set pythia8_card 23:onMode = off
+            set pythia8_card 23:onIfMatch = 11 -11
+            set pythia8_card 23:onIfMatch = 13 -13
+
+            done
+        \end{lstlisting}
+
+        The selection cuts after the \verb|Delphes| simulation:
+        \begin{itemize}
+            \item $n_{\gamma}$ cut: The number of leptons should be at least 1.
+            \item $n_{\ell}$ cut: The number of leptons should be at least 2.
+            \item $n_{j}$ cut: The number of jets should be at least 2.
+        \end{itemize}
+
+        Table~\ref{tab:GGF_VBF_Higgs_cutflow_number_Za2l} summarizes the cutflow number at different selection cuts.
+        \begin{table}[htpb]
+            \centering
+            \caption{Number of passing events and passing rates for GGF and VBF Higgs production at different selection cuts.}
+            \label{tab:GGF_VBF_Higgs_cutflow_number_Za2l}
+            \begin{tabular}{l|rr|rr}
+                Cut              & GGF    & pass rate & VBF   & pass rate \\ \hline
+                Total            & 100000 & 1         & 10000 & 1         \\
+                $n_{\gamma}$ cut & 58194  & 0.58      & 63467 & 0.63      \\
+                $n_{\ell}$ cut   & 29024  & 0.29      & 30289 & 0.30      \\
+                $n_j$ cut        & 4964   & 0.05      & 24001 & 0.24     
+            \end{tabular}
+        \end{table}
+
+        The branching ratio for the $Z\gamma$ channel is $\mathrm{BR}\left( h \to Z\gamma \right) = 1.533 \times 10^{-3}$, as given in \href{https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR}{this link}. If the branching ratio of leptonic decay of $Z$ boson is $\mathrm{BR}\left( Z \to 2\ell, \ell = e, \mu \right) = 3.36 \times 10^{-2}$, then the over all branching ratio is 
+        \[
+            \mathrm{BR} = 1.533 \times 10^{-3} \times 3.36 \times 10^{-2} \times 2 = 1.03 \times 10^{-4}.
+        \] 
+    % subsection sample_preparation (end) 
+
+% section h_to_za_z_to_2l_channel (end)
 
 \bibliographystyle{ieeetr}
 \bibliography{reference}
