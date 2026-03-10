@@ -82,37 +82,25 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8, 0.2), se
             data_VBF_BR[idx_VBF_BR_vl],
             data_GGF_BR[idx_GGF_BR_vl]
         ], axis=0)
-        # new_data_te = np.concatenate([
-        #     data_VBF_SR[idx_VBF_SR_te],
-        #     data_VBF_BR[idx_VBF_BR_te],
-        #     data_GGF_SR[idx_GGF_SR_te],
-        #     data_GGF_BR[idx_GGF_BR_te],
-        # ], axis=0)
 
         if data_tr is None:
             data_tr = new_data_tr
             data_vl = new_data_vl
-            # data_te = new_data_te
         else:
             data_tr = np.concatenate([data_tr, new_data_tr], axis=0)
             data_vl = np.concatenate([data_vl, new_data_vl], axis=0)
-            # data_te = np.concatenate([data_te, new_data_te], axis=0)
 
         new_label_tr = np.zeros(new_data_tr.shape[0])
         new_label_tr[:idx_VBF_SR_tr.shape[0] + idx_GGF_SR_tr.shape[0]] = 1
         new_label_vl = np.zeros(new_data_vl.shape[0])
         new_label_vl[:idx_VBF_SR_vl.shape[0] + idx_GGF_SR_vl.shape[0]] = 1
-        # new_label_te = np.zeros(new_data_te.shape[0])
-        # new_label_te[:n_test] = 1
 
         if label_tr is None:
             label_tr = new_label_tr
             label_vl = new_label_vl
-            # label_te = new_label_te
         else:
             label_tr = np.concatenate([label_tr, new_label_tr])
             label_vl = np.concatenate([label_vl, new_label_vl])
-            # label_te = np.concatenate([label_te, new_label_te])
 
     new_data_te = np.concatenate([
         data_VBF_SR[idx_VBF_SR_te],
@@ -128,6 +116,25 @@ def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8, 0.2), se
 
     return data_tr, data_vl, data_te, label_tr, label_vl, label_te
 
+def create_pure_sample_from(npy_dir, nevents: tuple):
+
+    # Load data
+    npy_dir = Path(npy_dir)
+    data_b = np.load(npy_dir / 'GGF-data.npy', allow_pickle=True)
+    data_s = np.load(npy_dir / 'VBF-data.npy', allow_pickle=True)
+
+    n_train, n_val, n_test = nevents
+
+    # Split the dataset into training and validation sets
+    X_train = np.concatenate((data_b[:n_train], data_s[:n_train]))
+    X_val = np.concatenate((data_b[n_train:n_train+n_val], data_s[n_train:n_train+n_val]))
+    X_test = np.concatenate((data_b[-n_test:], data_s[-n_test:]))
+    y_train = np.concatenate((np.zeros(n_train), np.ones(n_train)))
+    y_val = np.concatenate((np.zeros(n_val), np.ones(n_val)))
+    y_test = np.concatenate((np.zeros(n_test), np.ones(n_test)))
+
+    return X_train, X_val, X_test, y_train, y_val, y_test
+
 
 def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_300_3.1.npy', VBF_cutflow_file='../Sample/selection_results_VBF_300_3.1.npy', L=300, cut_type='mjj', BR=0.00227):
     # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt14TeV
@@ -139,46 +146,11 @@ def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_30
     GGF_selection = np.load(GGF_cutflow_file, allow_pickle=True).item()
     VBF_selection = np.load(VBF_cutflow_file, allow_pickle=True).item()
 
-    if cut_type == 'mjj':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['mjj: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['mjj: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['mjj: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'deta':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['deta: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['deta: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['deta: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['deta: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'mjj, deta':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['mjj, deta: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['mjj, deta: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['mjj, deta: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['mjj, deta: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'gluon_jet_2':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'gluon_jet_1':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'quark_jet_2':
+    if cut_type == 'quark_jet_2':
         n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
         n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
         n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
         n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'quark_jet_1':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['one quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['one quark jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['one quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['one quark jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-    elif cut_type == 'quark_gluon_jet_2':
-        n_GGF_SR = cross_section_GGF * GGF_selection['cutflow_number']['two quark jet: sig region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_GGF_BR = cross_section_GGF * GGF_selection['cutflow_number']['two gluon jet: bkg region'] / GGF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_SR = cross_section_VBF * VBF_selection['cutflow_number']['two quark jet: sig region'] / VBF_selection['cutflow_number']['Total'] * BR * L
-        n_VBF_BR = cross_section_VBF * VBF_selection['cutflow_number']['two gluon jet: bkg region'] / VBF_selection['cutflow_number']['Total'] * BR * L
     else:
         raise ValueError('cut_type must be mjj, deta, or mjj, or deta, or gluon_jet')
     return n_VBF_SR, n_GGF_SR, n_VBF_BR, n_GGF_BR
@@ -193,36 +165,6 @@ def get_sample_size(y):
         nb = (y.argmax(axis=1) == 0).sum()
     print(ns, nb)
     return ns, nb
-
-
-class CNN(tf.keras.Model):
-    def __init__(self, name='CNN'):
-        super(CNN, self).__init__(name=name)
-
-        self.bn = tf.keras.layers.BatchNormalization()
-
-        self.sub_network = tf.keras.Sequential([
-            tf.keras.layers.Conv2D(64, (5, 5), padding='same', activation='relu'),
-            tf.keras.layers.MaxPool2D((2, 2)),
-            tf.keras.layers.Conv2D(64, (5, 5), padding='same', activation='relu'),
-            tf.keras.layers.MaxPool2D((2, 2)),
-            tf.keras.layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
-            tf.keras.layers.MaxPool2D((2, 2)),
-            tf.keras.layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(128, activation='relu'),
-            tf.keras.layers.Dense(128, activation='relu'),
-            tf.keras.layers.Dense(128, activation='relu'),
-            tf.keras.layers.Dense(1, activation='sigmoid'),
-        ])
-
-    @tf.function
-    def call(self, inputs, training=False):
-
-        output = self.bn(inputs)
-        output = self.sub_network(output)
-
-        return output
 
 
 class EventCNN(tf.keras.Model):
@@ -319,22 +261,11 @@ def main():
 
     npy_paths = config['npy_paths']
     seed = config['seed']
-    luminosity = config['luminosity']
-    cut_type = config['cut_type']
     model_name = config['model_name']
-    model_structure = config['model_structure'] 
+    model_structure = config['model_structure']
+    training_method = config['training_method']
     sample_type = config['sample_type']
-
-    GGF_cutflow_file = config['GGF_cutflow_file']
-    VBF_cutflow_file = config['VBF_cutflow_file']
-    decay_channel = config['decay_channel']
-
-    if decay_channel == 'ZZ4l':
-        BR = 0.0001240
-    elif decay_channel == 'aa':
-        BR = 0.00227
-    else:
-        raise ValueError(f'Unknown decay channel: {decay_channel}')
+    remove_decay_products = config['remove_decay_products']
 
     # Training parameters
     with open('params.json', 'r') as f:
@@ -346,14 +277,34 @@ def main():
     min_delta = params['min_delta']
     learning_rate = params['learning_rate']
 
-    save_model_name = f'./CNN_models/last_model_GGF_VBF_CWoLa_{model_name}/'
+    save_model_name = f'./CNN_models/last_model_GGF_VBF_{training_method}_{model_name}/'
 
     # Sampling dataset
-    r_train, r_val = 0.8, 0.2
-    n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
-    n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
+    if training_method == 'CWoLa':
+        luminosity = config['luminosity']
+        cut_type = config['cut_type']
 
-    X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
+        GGF_cutflow_file = config['GGF_cutflow_file']
+        VBF_cutflow_file = config['VBF_cutflow_file']
+        decay_channel = config['decay_channel']
+
+        if decay_channel == 'ZZ4l':
+            BR = 0.0001240
+        elif decay_channel == 'aa':
+            BR = 0.00227
+        else:
+            raise ValueError(f'Unknown decay channel: {decay_channel}')
+
+        r_train, r_val = 0.8, 0.2
+        n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
+        n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
+        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed, remove_decay_products=remove_decay_products)
+    elif training_method == 'supervised':
+        n_events = config['n_train'], config['n_val'], config['n_test']
+        X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events, remove_decay_products=remove_decay_products)
+    else:
+        raise ValueError(f'Unknown training method: {training_method}')
+    
 
     # normalize the datasets
     X_train = pt_normalization(X_train)
@@ -374,9 +325,7 @@ def main():
         valid_dataset = tf.data.Dataset.from_tensor_slices((X_val, y_val))
         valid_dataset = valid_dataset.batch(BATCH_SIZE)
 
-    if model_structure == 'CNN':
-        model = CNN(name=model_name)
-    elif model_structure == 'event-CNN':
+    if model_structure == 'event-CNN':
         model = EventCNN()
     else:
         raise ValueError(f'Unknown model name: {model_name}')
@@ -390,7 +339,7 @@ def main():
     history = model.fit(train_dataset, validation_data=valid_dataset, epochs=EPOCHS, class_weight=class_weight, callbacks=[early_stopping, check_point])
 
     # Training results
-    best_model_name = f'./CNN_models/best_model_GGF_VBF_CWoLa_{model_name}/'
+    best_model_name = f'./CNN_models/best_model_GGF_VBF_{training_method}_{model_name}/'
     if not os.path.isdir(best_model_name):
         shutil.copytree(save_model_name, best_model_name, dirs_exist_ok=True)
         print('Save to best model')
@@ -422,7 +371,7 @@ def main():
 
     # Write results
     now = datetime.datetime.now()
-    file_name = 'GGF_VBF_CWoLa_training_results.csv'
+    file_name = f'GGF_VBF_training_results.csv'
     data_dict = {
                 'Train signal size': [train_size[0]],
                 'Train background size': [train_size[1]],
@@ -430,6 +379,9 @@ def main():
                 'Validation background size': [val_size[1]],
                 'Test signal size': [test_size[0]],
                 'Test background size': [test_size[1]],
+                'Training method': [training_method],
+                'Model structure': [model_structure],
+                'Model Name': [model_name],
                 'Loss': [results[0]],
                 'ACC': [ACC],
                 'AUC': [AUC],
@@ -437,7 +389,6 @@ def main():
                 'ACC-true': [true_label_ACC],
                 'AUC-true': [true_label_AUC],
                 'Sample Type': [sample_type],
-                'Model Name': [model_name],
                 'Training epochs': [len(history.history['loss']) + 1],
                 'time': [now],
                 }
