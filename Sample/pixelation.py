@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-# python pixelation.py <h5_path> <output_path> <resolution>
-# python pixelation.py ./data/mjj_cut/pre-processing/GGF_in_BR.h5 ./data/mjj_cut/pre-processing/40x40/GGF_in_BR.npy 40
+# python pixelation.py <h5_path> <output_path> <resolution> <case>
+# python pixelation.py data/di-photon/quark_jet_2_cut/pre-processing/VBF_in_SR.h5 data/di-photon/quark_jet_2_cut/pre-processing/remove_product_case_5/40x40/VBF_in_SR.npy 40 5
 
 import os
 import sys
