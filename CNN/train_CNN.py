@@ -135,6 +135,90 @@ def create_pure_sample_from(npy_dir, nevents: tuple):
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
+def create_ideal_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0):
+    # npy_dirs: list of npy directories
+    # nevents: tuple of (n_VBF_M1, n_GGF_M1, n_VBF_M2, n_GGF_M2)
+    # ratios: tuple of (r_train, r_val)
+    data_tr, data_vl, data_te = None, None, None
+    label_tr, label_vl, label_te = None, None, None
+
+    npy_dir0 = Path(npy_dirs[0])
+
+    data_VBF = np.load(npy_dir0 / 'VBF-data.npy')
+    data_GGF = np.load(npy_dir0 / 'GGF-data.npy')
+
+    n_VBF_M1, n_GGF_M1, n_VBF_M2, n_GGF_M2 = nevents
+    n_test = 10000
+
+    r_tr, r_vl = ratios
+
+    np.random.seed(seed)
+    idx_VBF = np.random.choice(data_VBF.shape[0], n_VBF_M1 + n_VBF_M2 + n_test, replace=False)
+    idx_GGF = np.random.choice(data_GGF.shape[0], n_GGF_M1 + n_GGF_M2 + n_test, replace=False)  
+
+    idx_VBF_M1_tr = idx_VBF[:int(n_VBF_M1*r_tr)]
+    idx_VBF_M1_vl = idx_VBF[int(n_VBF_M1*r_tr):n_VBF_M1]
+    idx_VBF_M2_tr = idx_VBF[n_VBF_M1:n_VBF_M1 + int(n_VBF_M2*r_tr)]
+    idx_VBF_M2_vl = idx_VBF[n_VBF_M1 + int(n_VBF_M2*r_tr):n_VBF_M1 + n_VBF_M2]
+    idx_VBF_te = idx_VBF[n_VBF_M1 + n_VBF_M2:n_VBF_M1 + n_VBF_M2 + n_test]
+    idx_GGF_M1_tr = idx_GGF[:int(n_GGF_M1*r_tr)]
+    idx_GGF_M1_vl = idx_GGF[int(n_GGF_M1*r_tr):n_GGF_M1]
+    idx_GGF_M2_tr = idx_GGF[n_GGF_M1:n_GGF_M1 + int(n_GGF_M2*r_tr)]
+    idx_GGF_M2_vl = idx_GGF[n_GGF_M1 + int(n_GGF_M2*r_tr):n_GGF_M1 + n_GGF_M2]
+    idx_GGF_te = idx_GGF[n_GGF_M1 + n_GGF_M2:n_GGF_M1 + n_GGF_M2 + n_test]
+
+
+    print(f'Preparing dataset from {npy_dirs}')
+    for npy_dir in npy_dirs:
+
+        npy_dir = Path(npy_dir)
+        data_VBF = np.load(npy_dir / 'VBF-data.npy')
+        data_GGF = np.load(npy_dir / 'GGF-data.npy')
+
+        new_data_tr = np.concatenate([
+            data_VBF[idx_VBF_M1_tr],
+            data_GGF[idx_GGF_M1_tr],
+            data_VBF[idx_VBF_M2_tr],
+            data_GGF[idx_GGF_M2_tr],
+        ], axis=0)
+        new_data_vl = np.concatenate([
+            data_VBF[idx_VBF_M1_vl],
+            data_GGF[idx_GGF_M1_vl],
+            data_VBF[idx_VBF_M2_vl],
+            data_GGF[idx_GGF_M2_vl],
+        ], axis=0)
+
+        if data_tr is None:
+            data_tr = new_data_tr
+            data_vl = new_data_vl
+        else:
+            data_tr = np.concatenate([data_tr, new_data_tr], axis=0)
+            data_vl = np.concatenate([data_vl, new_data_vl], axis=0)
+
+        new_label_tr = np.zeros(new_data_tr.shape[0])
+        new_label_tr[:idx_VBF_M1_tr.shape[0] + idx_GGF_M1_tr.shape[0]] = 1
+        new_label_vl = np.zeros(new_data_vl.shape[0])
+        new_label_vl[:idx_VBF_M1_vl.shape[0] + idx_GGF_M1_vl.shape[0]] = 1
+
+        if label_tr is None:
+            label_tr = new_label_tr
+            label_vl = new_label_vl
+        else:
+            label_tr = np.concatenate([label_tr, new_label_tr])
+            label_vl = np.concatenate([label_vl, new_label_vl])
+
+    new_data_te = np.concatenate([
+        data_VBF[idx_VBF_te],
+        data_GGF[idx_GGF_te],
+    ], axis=0)
+    data_te = new_data_te
+
+    new_label_te = np.zeros(new_data_te.shape[0])
+    new_label_te[:n_test] = 1
+    label_te = new_label_te
+
+    return data_tr, data_vl, data_te, label_tr, label_vl, label_te
+
 
 def compute_nevent_in_SR_BR(GGF_cutflow_file='../Sample/selection_results_GGF_300_3.1.npy', VBF_cutflow_file='../Sample/selection_results_VBF_300_3.1.npy', L=300, cut_type='mjj', BR=0.00227):
     # https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt14TeV
@@ -265,7 +349,6 @@ def main():
     model_structure = config['model_structure']
     training_method = config['training_method']
     sample_type = config['sample_type']
-    remove_decay_products = config['remove_decay_products']
 
     # Training parameters
     with open('params.json', 'r') as f:
@@ -298,13 +381,32 @@ def main():
         r_train, r_val = 0.8, 0.2
         n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
         n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
-        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed, remove_decay_products=remove_decay_products)
+        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
     elif training_method == 'supervised':
         n_events = config['n_train'], config['n_val'], config['n_test']
-        X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events, remove_decay_products=remove_decay_products)
+        X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events)
+    elif training_method == 'ideal_mix':
+        luminosity = config['luminosity']
+        cut_type = config['cut_type']
+
+        GGF_cutflow_file = config['GGF_cutflow_file']
+        VBF_cutflow_file = config['VBF_cutflow_file']
+        decay_channel = config['decay_channel']
+
+        if decay_channel == 'ZZ4l':
+            BR = 0.0001240
+        elif decay_channel == 'aa':
+            BR = 0.00227
+        else:
+            raise ValueError(f'Unknown decay channel: {decay_channel}')
+
+        r_train, r_val = 0.8, 0.2
+        n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
+        n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
+        X_train, X_val, X_test, y_train, y_val, y_test = create_ideal_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed)
     else:
         raise ValueError(f'Unknown training method: {training_method}')
-    
+
 
     # normalize the datasets
     X_train = pt_normalization(X_train)
