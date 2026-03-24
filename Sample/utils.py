@@ -109,3 +109,21 @@ def phi_shift_and_flipping(pts, etas, phis):
     phi_news = phi_shift * phi_flip
 
     return pts, eta_news, phi_news
+
+def flipping_only(pts, etas, phis):
+    variances = np.var(phis, axis=1)
+    phis = np.where((variances > 0.5)[:, None], phis + np.pi, phis)
+    phis = std_phi(phis)
+
+    eta_shift = etas
+    phi_shift = phis
+
+    pt_quadrants = quadrant_max_vectorized(eta_shift, phi_shift, pts)
+
+    phi_flip = np.where((np.argmax(pt_quadrants, axis=1) == 1) | (np.argmax(pt_quadrants, axis=1) == 2), -1., 1.)[:, None]
+    eta_flip = np.where((np.argmax(pt_quadrants, axis=1) == 2) | (np.argmax(pt_quadrants, axis=1) == 3), -1., 1.)[:, None]
+
+    eta_news = eta_shift * eta_flip
+    phi_news = phi_shift * phi_flip
+
+    return pts, eta_news, phi_news
