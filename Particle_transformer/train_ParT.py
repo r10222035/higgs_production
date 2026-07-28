@@ -18,7 +18,13 @@ from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
 
 from model_tf import ParT_Light
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+if 'CUDA_VISIBLE_DEVICES' not in os.environ:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['XLA_FLAGS'] = '--xla_gpu_cuda_data_dir=/home/r10222035/.conda/envs/tf2'
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 MAX_CONSTI = {
@@ -30,36 +36,62 @@ MAX_CONSTI = {
 }
 
 
-def prepare_feature_from_h5(h5_file, remove_decay_products=False):
+def prepare_feature_from_h5(h5_file, remove_decay_products=False, decay_channel='aa'):
     with h5py.File(h5_file, 'r') as f:
-        event_pt = np.concatenate([f['TOWER/pt'][:], f['TRACK/pt'][:], f['PHOTON/pt'][:]], axis=1)
-        event_eta = np.concatenate([f['TOWER/eta'][:], f['TRACK/eta'][:], f['PHOTON/eta'][:]], axis=1)
-        event_phi = np.concatenate([f['TOWER/phi'][:], f['TRACK/phi'][:], f['PHOTON/phi'][:]], axis=1)
-        event_mask = np.concatenate([f['TOWER/mask'][:], f['TRACK/mask'][:], np.tile([True, True], (event_pt.shape[0], 1))], axis=1)
+        if decay_channel == 'Za2l':
+            event_pt = np.concatenate([f['TOWER/pt'][:], f['TRACK/pt'][:], f['PHOTON/pt'][:], f['LEPTON/pt'][:]], axis=1)
+            event_eta = np.concatenate([f['TOWER/eta'][:], f['TRACK/eta'][:], f['PHOTON/eta'][:], f['LEPTON/eta'][:]], axis=1)
+            event_phi = np.concatenate([f['TOWER/phi'][:], f['TRACK/phi'][:], f['PHOTON/phi'][:], f['LEPTON/phi'][:]], axis=1)
+            total_decay_len = 3 # 1 photon + 2 leptons
+            event_mask = np.concatenate([f['TOWER/mask'][:], f['TRACK/mask'][:], np.tile([True] * total_decay_len, (event_pt.shape[0], 1))], axis=1)
+            
+            if remove_decay_products:
+                decay_product_eta = np.concatenate([f['PHOTON/eta'][:], f['LEPTON/eta'][:]], axis=1)
+                decay_product_phi = np.concatenate([f['PHOTON/phi'][:], f['LEPTON/phi'][:]], axis=1)
+                indices = np.where((event_eta[:, :, None] == decay_product_eta[:, None, :]) & (event_phi[:, :, None] == decay_product_phi[:, None, :]))
+                event_mask[indices[0], indices[1]] = False
+        else:
+            event_pt = np.concatenate([f['TOWER/pt'][:], f['TRACK/pt'][:], f['PHOTON/pt'][:]], axis=1)
+            event_eta = np.concatenate([f['TOWER/eta'][:], f['TRACK/eta'][:], f['PHOTON/eta'][:]], axis=1)
+            event_phi = np.concatenate([f['TOWER/phi'][:], f['TRACK/phi'][:], f['PHOTON/phi'][:]], axis=1)
+            event_mask = np.concatenate([f['TOWER/mask'][:], f['TRACK/mask'][:], np.tile([True, True], (event_pt.shape[0], 1))], axis=1)
 
-        if remove_decay_products:
-            photon_eta = f['PHOTON/eta'][:]
-            photon_phi = f['PHOTON/phi'][:]
-            indices = np.where((event_eta[:, :, None] == photon_eta[:, None, :]) & (event_phi[:, :, None] == photon_phi[:, None, :]))
-            event_mask[indices[0], indices[1]] = False
+            if remove_decay_products:
+                photon_eta = f['PHOTON/eta'][:]
+                photon_phi = f['PHOTON/phi'][:]
+                indices = np.where((event_eta[:, :, None] == photon_eta[:, None, :]) & (event_phi[:, :, None] == photon_phi[:, None, :]))
+                event_mask[indices[0], indices[1]] = False
 
         event_pt[event_mask == False] = float('nan')
         event_eta[event_mask == False] = float('nan')
         event_phi[event_mask == False] = float('nan')
 
-        event_particle_type_0 = np.array([1] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
-        event_particle_type_0 = np.tile(event_particle_type_0, (event_pt.shape[0], 1))
-        event_particle_type_1 = np.array([0] * MAX_CONSTI['Tower'] + [1] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
-        event_particle_type_1 = np.tile(event_particle_type_1, (event_pt.shape[0], 1))
-        event_particle_type_2 = np.array([0] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [1] * MAX_CONSTI['Photon'])
-        event_particle_type_2 = np.tile(event_particle_type_2, (event_pt.shape[0], 1))
+        if decay_channel == 'Za2l':
+            total_decay_len = 3
+            event_particle_type_0 = np.array([1] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [0] * total_decay_len)
+            event_particle_type_0 = np.tile(event_particle_type_0, (event_pt.shape[0], 1))
+            event_particle_type_1 = np.array([0] * MAX_CONSTI['Tower'] + [1] * MAX_CONSTI['Track'] + [0] * total_decay_len)
+            event_particle_type_1 = np.tile(event_particle_type_1, (event_pt.shape[0], 1))
+            event_particle_type_2 = np.array([0] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [1] * total_decay_len)
+            event_particle_type_2 = np.tile(event_particle_type_2, (event_pt.shape[0], 1))
+        else:
+            event_particle_type_0 = np.array([1] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
+            event_particle_type_0 = np.tile(event_particle_type_0, (event_pt.shape[0], 1))
+            event_particle_type_1 = np.array([0] * MAX_CONSTI['Tower'] + [1] * MAX_CONSTI['Track'] + [0] * MAX_CONSTI['Photon'])
+            event_particle_type_1 = np.tile(event_particle_type_1, (event_pt.shape[0], 1))
+            event_particle_type_2 = np.array([0] * MAX_CONSTI['Tower'] + [0] * MAX_CONSTI['Track'] + [1] * MAX_CONSTI['Photon'])
+            event_particle_type_2 = np.tile(event_particle_type_2, (event_pt.shape[0], 1))
 
         features = np.stack([event_pt, event_eta, event_phi, event_particle_type_0, event_particle_type_1, event_particle_type_2], axis=-1)
+
+        if decay_channel == 'Za2l':
+            if features.shape[1] > 402:
+                features = features[:, :402, :]
 
     return features
 
 
-def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0, remove_decay_products=False):
+def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0, remove_decay_products=False, decay_channel='aa'):
     # h5_dirs: list of npy directories
     # nevents: tuple of (n_VBF_SR, n_VBF_BR, n_GGF_SR, n_GGF_BR)
     # ratios: tuple of (r_train, r_val)
@@ -67,10 +99,10 @@ def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), see
     label_tr, label_vl, label_te = None, None, None
 
     h5_dir0 = Path(h5_dirs[0])
-    data_VBF_SR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_SR.h5', remove_decay_products)
-    data_VBF_BR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_BR.h5', remove_decay_products)
-    data_GGF_SR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_SR.h5', remove_decay_products)
-    data_GGF_BR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_BR.h5', remove_decay_products)
+    data_VBF_SR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_SR.h5', remove_decay_products, decay_channel)
+    data_VBF_BR = prepare_feature_from_h5(h5_dir0 / 'VBF_in_BR.h5', remove_decay_products, decay_channel)
+    data_GGF_SR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_SR.h5', remove_decay_products, decay_channel)
+    data_GGF_BR = prepare_feature_from_h5(h5_dir0 / 'GGF_in_BR.h5', remove_decay_products, decay_channel)
     n_data_VBF_SR = data_VBF_SR.shape[0]
     n_data_VBF_BR = data_VBF_BR.shape[0]
     n_data_GGF_SR = data_GGF_SR.shape[0]
@@ -109,10 +141,10 @@ def create_mix_sample_from(h5_dirs: list, nevents: tuple, ratios=(0.8, 0.2), see
     for h5_dir in h5_dirs:
 
         h5_dir = Path(h5_dir)
-        data_VBF_SR = prepare_feature_from_h5(h5_dir / 'VBF_in_SR.h5', remove_decay_products)
-        data_VBF_BR = prepare_feature_from_h5(h5_dir / 'VBF_in_BR.h5', remove_decay_products)
-        data_GGF_SR = prepare_feature_from_h5(h5_dir / 'GGF_in_SR.h5', remove_decay_products)
-        data_GGF_BR = prepare_feature_from_h5(h5_dir / 'GGF_in_BR.h5', remove_decay_products)
+        data_VBF_SR = prepare_feature_from_h5(h5_dir / 'VBF_in_SR.h5', remove_decay_products, decay_channel)
+        data_VBF_BR = prepare_feature_from_h5(h5_dir / 'VBF_in_BR.h5', remove_decay_products, decay_channel)
+        data_GGF_SR = prepare_feature_from_h5(h5_dir / 'GGF_in_SR.h5', remove_decay_products, decay_channel)
+        data_GGF_BR = prepare_feature_from_h5(h5_dir / 'GGF_in_BR.h5', remove_decay_products, decay_channel)
 
         new_data_tr = np.concatenate([
             data_VBF_SR[idx_VBF_SR_tr],
@@ -301,13 +333,15 @@ def main():
             BR = 0.0001240
         elif decay_channel == 'aa':
             BR = 0.00227
+        elif decay_channel == 'Za2l':
+            BR = 1.533e-3 * (3.36e-2 + 3.36e-2)
         else:
             raise ValueError(f'Unknown decay channel: {decay_channel}')
 
         r_train, r_val = 0.8, 0.2
         n_SR_VBF, n_SR_GGF, n_BR_VBF, n_BR_GGF = compute_nevent_in_SR_BR(GGF_cutflow_file, VBF_cutflow_file, luminosity, cut_type, BR)
         n_events = (int(n_SR_VBF), int(n_SR_GGF), int(n_BR_VBF), int(n_BR_GGF))
-        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed, remove_decay_products=remove_decay_products)
+        X_train, X_val, X_test, y_train, y_val, y_test = create_mix_sample_from(npy_paths, n_events, (r_train, r_val), seed=seed, remove_decay_products=remove_decay_products, decay_channel=decay_channel)
     elif training_method == 'supervised':
         n_events = config['n_train'], config['n_val'], config['n_test']
         X_train, X_val, X_test, y_train, y_val, y_test = create_pure_sample_from(npy_paths[0], n_events, remove_decay_products=remove_decay_products)

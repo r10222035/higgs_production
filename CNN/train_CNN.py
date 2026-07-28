@@ -16,7 +16,15 @@ import tensorflow as tf
 from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, accuracy_score
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# 若外部（調度腳本）已透過環境變數設定 CUDA_VISIBLE_DEVICES，則優先使用；否則預設 GPU 0
+if 'CUDA_VISIBLE_DEVICES' not in os.environ:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['XLA_FLAGS'] = '--xla_gpu_cuda_data_dir=/home/r10222035/.conda/envs/tf2'
+
+# 啟用 memory growth：各進程按需使用 GPU 記憶體，防止多進程平行時 OOM
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def create_mix_sample_from(npy_dirs: list, nevents: tuple, ratios=(0.8, 0.2), seed=0):
@@ -375,6 +383,8 @@ def main():
             BR = 0.0001240
         elif decay_channel == 'aa':
             BR = 0.00227
+        elif decay_channel == 'Za':
+            BR = 1.533e-3 * (3.36e-2 + 3.36e-2)
         else:
             raise ValueError(f'Unknown decay channel: {decay_channel}')
 
@@ -397,6 +407,8 @@ def main():
             BR = 0.0001240
         elif decay_channel == 'aa':
             BR = 0.00227
+        elif decay_channel == 'Za':
+            BR = 1.533e-3 * (3.36e-2 + 3.36e-2)
         else:
             raise ValueError(f'Unknown decay channel: {decay_channel}')
 
